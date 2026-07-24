@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sisters Lounge Exclusive — a private, sisters-only community for connection, learning, and support.">
-  <title>Sisters Lounge Exclusive</title>
+  <meta name="description" content="Sisters Lounge Exclusive — monthly salon subscriptions, appointment booking and hair-care management for Sisters Lounge, Ilorin.">
+  <title>Sisters Lounge Exclusive — Monthly Salon Subscriptions</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -21,118 +21,399 @@
         <span class="nav-toggle-bar" aria-hidden="true"></span>
       </button>
       <ul class="nav-menu" id="nav-menu">
-        <li><a href="#about">About</a></li>
-        <li><a href="#offerings">What We Offer</a></li>
-        <li><a href="#guidelines">Guidelines</a></li>
-        <li><a class="btn btn-small" href="#join">Request to Join</a></li>
+        <li><a href="#top">Home</a></li>
+        <li><a href="#plans">Subscription Plans</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#consultations">Consultations</a></li>
+        <li><a href="#products">Products</a></li>
+        <li><a href="#login">Login</a></li>
+        <li><a class="btn btn-primary btn-nav" href="#final-cta">Join Sisters Lounge Exclusive</a></li>
       </ul>
     </nav>
   </header>
 
   <main id="top">
 
+    <!-- ============================ HERO ============================ -->
     <section class="hero">
-      <div class="container hero-inner">
-        <p class="hero-eyebrow">A private, sisters-only space</p>
-        <h1>A lounge of your own,<br>among sisters who understand.</h1>
-        <p class="hero-lead">
-          Sisters Lounge Exclusive is a warm, moderated community where sisters
-          gather to learn, share, and support one another — away from the noise
-          of public social media.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#join">Request to Join</a>
-          <a class="btn btn-ghost" href="#about">Learn more</a>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Monthly Hair-Care Membership</p>
+          <h1>Healthy Hair Care, Made&nbsp;Consistent</h1>
+          <p class="hero-lead">
+            Choose a monthly Sisters Lounge plan, book your salon visits ahead
+            and enjoy a more organised and consistent hair-care experience.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#plans">Explore Subscription Plans</a>
+            <a class="btn btn-ghost" href="#how-it-works">How It Works</a>
+          </div>
+          <p class="hero-note">
+            Plans available for adults, children, undergraduates and
+            home-service customers within Ilorin.
+          </p>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-blob"></div>
+          <div class="app-card app-card-plan">
+            <p class="app-card-label">Active plan</p>
+            <p class="app-card-value">Deluxe · 3 visits / month</p>
+            <div class="meter"><span style="width: 66%"></span></div>
+            <p class="app-card-sub">2 visits remaining</p>
+          </div>
+          <div class="app-card app-card-appt">
+            <p class="app-card-label">Next appointment</p>
+            <p class="app-card-value">Sat 9 Aug · 10:00 AM</p>
+            <p class="app-card-sub">Wash, treatment &amp; styling</p>
+          </div>
+          <div class="app-card app-card-extra">
+            <p class="app-card-label">Added to visit</p>
+            <p class="app-card-value">Henna + Hair trimming</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="about">
-      <div class="container narrow">
-        <h2>About the Lounge</h2>
-        <p>
-          We started Sisters Lounge Exclusive with a simple idea: sisters
-          deserve a space that is <strong>private</strong>,
-          <strong>positive</strong>, and <strong>purposeful</strong>. Every
-          member is verified, every conversation is moderated with care, and
-          everything shared in the lounge stays in the lounge.
-        </p>
-        <p>
-          Whether you are looking for meaningful friendships, a study circle,
-          honest advice, or simply a comfortable place to unwind, there is a
-          seat here for you.
-        </p>
-      </div>
-    </section>
-
-    <section class="section section-alt" id="offerings">
+    <!-- ==================== 1. SUBSCRIPTION PLANS ==================== -->
+    <section class="section" id="plans">
       <div class="container">
-        <h2>What We Offer</h2>
-        <div class="card-grid">
-          <article class="card">
-            <h3>Weekly Circles</h3>
-            <p>Regular study and reflection circles, led by sisters, at a
-              relaxed pace that fits real life.</p>
+        <h2>Choose a Plan That Fits Your Hair-Care Routine</h2>
+        <p class="section-lead">
+          Every subscription runs for one monthly cycle with a set number of
+          salon visits included. All prices below are sample placeholders.
+        </p>
+
+        <div class="plan-grid">
+          <article class="plan-card">
+            <h3>Basic</h3>
+            <p class="plan-desc">Essential monthly care — wash, condition and simple styling.</p>
+            <p class="plan-price">₦15,000<span>/month · sample price</span></p>
+            <p class="plan-visits">2 salon visits included</p>
+            <ul class="plan-benefits">
+              <li>Wash &amp; deep condition</li>
+              <li>Simple protective styling</li>
+              <li>Booking reminders</li>
+            </ul>
+            <a class="btn btn-outline" href="#final-cta">View Plan</a>
           </article>
-          <article class="card">
-            <h3>Book Club</h3>
-            <p>One book a month, chosen together — with a cozy discussion
-              thread and a live wrap-up chat.</p>
+
+          <article class="plan-card plan-card-featured">
+            <p class="plan-badge">Most popular</p>
+            <h3>Deluxe</h3>
+            <p class="plan-desc">A fuller routine with treatments for steady growth and retention.</p>
+            <p class="plan-price">₦25,000<span>/month · sample price</span></p>
+            <p class="plan-visits">3 salon visits included</p>
+            <ul class="plan-benefits">
+              <li>Everything in Basic</li>
+              <li>Monthly scalp treatment</li>
+              <li>Steaming session</li>
+            </ul>
+            <a class="btn btn-primary" href="#final-cta">View Plan</a>
           </article>
-          <article class="card">
-            <h3>Support &amp; Advice</h3>
-            <p>A confidential space to ask questions and get encouragement
-              from sisters who have been there.</p>
+
+          <article class="plan-card">
+            <h3>Premium</h3>
+            <p class="plan-desc">The complete Sisters Lounge experience, every single week.</p>
+            <p class="plan-price">₦40,000<span>/month · sample price</span></p>
+            <p class="plan-visits">4 salon visits included</p>
+            <ul class="plan-benefits">
+              <li>Everything in Deluxe</li>
+              <li>Premium styling options</li>
+              <li>Priority weekend slots</li>
+            </ul>
+            <a class="btn btn-outline" href="#final-cta">View Plan</a>
           </article>
-          <article class="card">
-            <h3>Events &amp; Meetups</h3>
-            <p>Online workshops and, where members are close by, small
-              in-person gatherings.</p>
+
+          <article class="plan-card">
+            <h3>Undergraduate</h3>
+            <p class="plan-desc">Student-friendly pricing for consistent care on a budget.</p>
+            <p class="plan-price">₦10,000<span>/month · sample price</span></p>
+            <p class="plan-visits">2 salon visits included</p>
+            <ul class="plan-benefits">
+              <li>Wash &amp; condition</li>
+              <li>Neat everyday styling</li>
+              <li>Valid student ID required</li>
+            </ul>
+            <a class="btn btn-outline" href="#final-cta">View Plan</a>
           </article>
+
+          <article class="plan-card">
+            <h3>Kids</h3>
+            <p class="plan-desc">Gentle care for children, managed from a parent's account.</p>
+            <p class="plan-price">₦12,000<span>/month · sample price</span></p>
+            <p class="plan-visits">2 salon visits included</p>
+            <ul class="plan-benefits">
+              <li>Gentle wash &amp; detangling</li>
+              <li>Child-friendly styling</li>
+              <li>Linked to a parent profile</li>
+            </ul>
+            <a class="btn btn-outline" href="#final-cta">View Plan</a>
+          </article>
+
+          <article class="plan-card">
+            <h3>Adult</h3>
+            <p class="plan-desc">Balanced everyday care for adults who want routine without extras.</p>
+            <p class="plan-price">₦18,000<span>/month · sample price</span></p>
+            <p class="plan-visits">2 salon visits included</p>
+            <ul class="plan-benefits">
+              <li>Wash, condition &amp; style</li>
+              <li>Seasonal treatment option</li>
+              <li>Weekend booking available</li>
+            </ul>
+            <a class="btn btn-outline" href="#final-cta">View Plan</a>
+          </article>
+
+          <article class="plan-card">
+            <h3>Home Service</h3>
+            <p class="plan-desc">A Sisters Lounge stylist comes to you — within Ilorin only.</p>
+            <p class="plan-price">₦30,000<span>/month · sample price</span></p>
+            <p class="plan-visits">2 home visits included</p>
+            <ul class="plan-benefits">
+              <li>Full service at your home</li>
+              <li>All tools &amp; products brought along</li>
+              <li>Available within Ilorin only</li>
+            </ul>
+            <a class="btn btn-outline" href="#final-cta">View Plan</a>
+          </article>
+        </div>
+
+        <p class="fine-print">
+          Subscription visits must be at least seven days apart. Unused visits
+          expire at the end of the monthly cycle and cannot be carried forward.
+          Missed appointments do not automatically consume a visit.
+        </p>
+      </div>
+    </section>
+
+    <!-- ======================= 2. HOW IT WORKS ======================= -->
+    <section class="section section-alt" id="how-it-works">
+      <div class="container">
+        <h2>Your Monthly Hair Care in Four Simple Steps</h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-num">1</span>
+            <h3>Choose your subscription plan</h3>
+            <p>Pick the plan that matches your routine — adult, kids, undergraduate or home service.</p>
+          </li>
+          <li class="step">
+            <span class="step-num">2</span>
+            <h3>Complete your payment</h3>
+            <p>Pay securely online and your monthly cycle starts right away.</p>
+          </li>
+          <li class="step">
+            <span class="step-num">3</span>
+            <h3>Book your preferred appointment dates</h3>
+            <p>Reserve your visits ahead, including weekends. Visits must be at least seven days apart.</p>
+          </li>
+          <li class="step">
+            <span class="step-num">4</span>
+            <h3>Attend your visits and stay consistent</h3>
+            <p>Track visits used and remaining from your dashboard, with reminders before each one.</p>
+          </li>
+        </ol>
+        <p class="callout">
+          <strong>Please note:</strong> unused visits expire at the end of the
+          subscription cycle and cannot be carried forward.
+        </p>
+      </div>
+    </section>
+
+    <!-- ====================== 3. EXTRA SERVICES ====================== -->
+    <section class="section" id="extra-services">
+      <div class="container">
+        <h2>Personalise Your Next Appointment</h2>
+        <p class="section-lead">
+          Subscribers can add extra services that may not be included in their
+          monthly plan. Each extra service attracts an additional fee.
+        </p>
+        <ul class="chip-list">
+          <li>Hair dyeing</li>
+          <li>Beading</li>
+          <li>Manicure</li>
+          <li>Pedicure</li>
+          <li>Henna</li>
+          <li>Hair trimming</li>
+          <li>Special styling</li>
+          <li>Additional treatments</li>
+        </ul>
+        <a class="btn btn-outline" href="#final-cta">View Extra Services</a>
+      </div>
+    </section>
+
+    <!-- ==================== 4. KIDS & FAMILY ==================== -->
+    <section class="section section-alt" id="family">
+      <div class="container split">
+        <div>
+          <h2>Manage Your Family's Hair Care in One Place</h2>
+          <p class="section-lead">
+            Parents can create profiles for multiple children, track each
+            child's subscription, book appointments and view their hair-care
+            history — all from one account.
+          </p>
+          <a class="btn btn-primary" href="#final-cta">Create Your Account</a>
+        </div>
+        <div class="family-preview" aria-hidden="true">
+          <div class="mini-card">
+            <span class="avatar">A</span>
+            <div>
+              <p class="mini-title">Aisha · Kids Plan</p>
+              <p class="mini-sub">1 of 2 visits used</p>
+            </div>
+          </div>
+          <div class="mini-card">
+            <span class="avatar avatar-gold">H</span>
+            <div>
+              <p class="mini-title">Halima · Kids Plan</p>
+              <p class="mini-sub">Next visit: Sat 16 Aug</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="guidelines">
-      <div class="container narrow">
-        <h2>Community Guidelines</h2>
-        <ul class="guidelines">
-          <li><strong>Sisters only.</strong> Membership is verified and the
-            lounge is never open to the public.</li>
-          <li><strong>Kindness first.</strong> Disagreement is welcome;
-            disrespect is not.</li>
-          <li><strong>Privacy is sacred.</strong> Nothing shared inside the
-            lounge may be shared outside it.</li>
-          <li><strong>No promotion without permission.</strong> Ask a
-            moderator before sharing products or services.</li>
+    <!-- ==================== 5. PAID CONSULTATIONS ==================== -->
+    <section class="section" id="consultations">
+      <div class="container">
+        <h2>Get Professional Hair and Scalp Guidance</h2>
+        <p class="section-lead">
+          Book a one-on-one session with a Sisters Lounge professional.
+          Consultations are charged separately from subscriptions.
+        </p>
+        <div class="card-grid">
+          <article class="card"><h3>General hair consultation</h3><p>A full review of your routine, goals and current hair condition.</p></article>
+          <article class="card"><h3>Hair &amp; scalp assessment</h3><p>A closer look at scalp health, breakage and product build-up.</p></article>
+          <article class="card"><h3>Children's hair consultation</h3><p>Age-appropriate care plans for your child's hair type.</p></article>
+          <article class="card"><h3>Postpartum hair consultation</h3><p>Support for shedding and regrowth after childbirth.</p></article>
+          <article class="card"><h3>Transitioning hair consultation</h3><p>Guidance for moving from relaxed to natural hair.</p></article>
+          <article class="card"><h3>Product recommendation</h3><p>A personalised product line-up matched to your hair.</p></article>
+        </div>
+        <a class="btn btn-primary" href="#final-cta">Book a Consultation</a>
+      </div>
+    </section>
+
+    <!-- ======================= 6. PRODUCT SHOP ======================= -->
+    <section class="section section-alt" id="products">
+      <div class="container">
+        <h2>Complete Your Routine With Recommended Products</h2>
+        <p class="section-lead">
+          Stylist-recommended products, available to purchase separately at any
+          time.
+        </p>
+        <div class="product-grid">
+          <article class="product-card"><div class="product-art product-art-1"></div><h3>Shampoo</h3><p class="product-price">From ₦4,500 <span>· sample</span></p></article>
+          <article class="product-card"><div class="product-art product-art-2"></div><h3>Conditioner</h3><p class="product-price">From ₦4,800 <span>· sample</span></p></article>
+          <article class="product-card"><div class="product-art product-art-3"></div><h3>Leave-in conditioner</h3><p class="product-price">From ₦5,200 <span>· sample</span></p></article>
+          <article class="product-card"><div class="product-art product-art-4"></div><h3>Hair oils</h3><p class="product-price">From ₦3,500 <span>· sample</span></p></article>
+          <article class="product-card"><div class="product-art product-art-5"></div><h3>Scalp treatments</h3><p class="product-price">From ₦6,000 <span>· sample</span></p></article>
+          <article class="product-card"><div class="product-art product-art-6"></div><h3>Children's products</h3><p class="product-price">From ₦3,000 <span>· sample</span></p></article>
+          <article class="product-card"><div class="product-art product-art-7"></div><h3>Hair accessories</h3><p class="product-price">From ₦1,500 <span>· sample</span></p></article>
+        </div>
+        <a class="btn btn-outline" href="#final-cta">Shop Hair-Care Products</a>
+      </div>
+    </section>
+
+    <!-- ==================== 7. MEMBERSHIP BENEFITS ==================== -->
+    <section class="section" id="benefits">
+      <div class="container">
+        <h2>Why Join Sisters Lounge Exclusive?</h2>
+        <ul class="benefits-grid">
+          <li>Easier monthly hair-care planning</li>
+          <li>Convenient online appointment booking</li>
+          <li>Clear record of visits used and remaining</li>
+          <li>Appointment and renewal reminders</li>
+          <li>Plans for adults, children and undergraduates</li>
+          <li>Optional home-service plans within Ilorin</li>
+          <li>Access to professional consultations</li>
+          <li>Ability to add extra services</li>
+          <li>Secure online payments</li>
         </ul>
       </div>
     </section>
 
-    <section class="section section-alt" id="join">
-      <div class="container narrow">
-        <h2>Request to Join</h2>
-        <p>
-          Tell us a little about yourself and a moderator will reach out.
-          Requests are reviewed personally — please allow a few days.
+    <!-- ================== 8. DASHBOARD PREVIEW ================== -->
+    <section class="section section-dark" id="dashboard">
+      <div class="container">
+        <h2>Everything in One Dashboard</h2>
+        <p class="section-lead">
+          Subscribers manage their whole hair-care routine from a simple
+          personal dashboard.
         </p>
-        <form class="join-form" id="join-form" novalidate>
-          <div class="field">
-            <label for="name">Your name</label>
-            <input type="text" id="name" name="name" autocomplete="name" required>
+        <div class="dash" aria-label="Preview of the subscriber dashboard">
+          <div class="dash-header">
+            <p class="dash-hello">Assalamu alaikum, Maryam</p>
+            <span class="dash-pill">Deluxe · Active</span>
           </div>
-          <div class="field">
-            <label for="email">Email address</label>
-            <input type="email" id="email" name="email" autocomplete="email" required>
+          <div class="dash-grid">
+            <div class="dash-tile">
+              <p class="dash-label">Visits remaining</p>
+              <p class="dash-big">2 <span>of 3</span></p>
+              <div class="meter meter-light"><span style="width: 66%"></span></div>
+            </div>
+            <div class="dash-tile">
+              <p class="dash-label">Subscription expires</p>
+              <p class="dash-big">28 Aug</p>
+              <p class="dash-sub">Renews automatically unless you opt out</p>
+            </div>
+            <div class="dash-tile">
+              <p class="dash-label">Next appointment</p>
+              <p class="dash-big">Sat 9 Aug</p>
+              <p class="dash-sub">10:00 AM · Wash &amp; treatment</p>
+            </div>
+            <div class="dash-tile dash-actions">
+              <button class="btn btn-primary" type="button">Book appointment</button>
+              <button class="btn btn-ghost btn-ghost-light" type="button">Add extra service</button>
+            </div>
+            <div class="dash-tile dash-wide">
+              <p class="dash-label">Payment history</p>
+              <ul class="dash-list">
+                <li><span>Deluxe plan · July cycle</span><span>₦25,000</span></li>
+                <li><span>Henna (extra service)</span><span>₦3,000</span></li>
+                <li><span>Leave-in conditioner</span><span>₦5,200</span></li>
+              </ul>
+            </div>
+            <div class="dash-tile dash-wide">
+              <p class="dash-label">Child profiles</p>
+              <div class="dash-chips">
+                <span class="dash-chip">Aisha · Kids Plan · 1 visit left</span>
+                <span class="dash-chip">Halima · Kids Plan · 2 visits left</span>
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <label for="message">How did you hear about us, and what are you
-              hoping to find here?</label>
-            <textarea id="message" name="message" rows="4" required></textarea>
-          </div>
-          <button class="btn btn-primary" type="submit">Send request</button>
-          <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
-        </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================== 9. FAQ ========================== -->
+    <section class="section" id="faq">
+      <div class="container narrow">
+        <h2>Frequently Asked Questions</h2>
+        <details><summary>How long does a subscription last?</summary><p>Every subscription runs for one monthly cycle from the day payment is completed.</p></details>
+        <details><summary>Can unused visits be carried forward?</summary><p>No. Unused visits expire at the end of the cycle and cannot roll over to the next month.</p></details>
+        <details><summary>Can I cancel after subscribing?</summary><p>An already-paid active subscription cannot be cancelled, and subscriptions cannot be paused. You can opt out of the next renewal at any time from your dashboard.</p></details>
+        <details><summary>Can I book both visits in the same week?</summary><p>No. Subscription visits must be at least seven days apart.</p></details>
+        <details><summary>Can I choose my stylist?</summary><p>No. Stylists are assigned by Sisters Lounge to keep scheduling fair and appointments on time.</p></details>
+        <details><summary>Can I add extra services to my visit?</summary><p>Yes — services like dyeing, henna, manicure or trimming can be added to any appointment for an additional fee.</p></details>
+        <details><summary>Are consultations included?</summary><p>No. Consultations are professional sessions charged separately from your subscription.</p></details>
+        <details><summary>Is home service available outside Ilorin?</summary><p>Not yet — home-service plans are currently available within Ilorin only.</p></details>
+        <details><summary>Can I manage subscriptions for more than one child?</summary><p>Yes. You can create a profile for each child, subscribe them to a plan and manage all their bookings from your account.</p></details>
+        <details><summary>Can I change my plan?</summary><p>Yes — plan changes take effect from your next monthly cycle, and weekend bookings are available on all plans.</p></details>
+      </div>
+    </section>
+
+    <!-- ====================== 10. FINAL CTA ====================== -->
+    <section class="section final-cta" id="final-cta">
+      <div class="container narrow">
+        <h2>Ready to Make Hair Care More Consistent?</h2>
+        <p class="section-lead">
+          Choose your plan, complete your subscription and book your first
+          Sisters Lounge visit.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#plans">View Plans</a>
+          <a class="btn btn-ghost" href="#login" id="login">Create an Account</a>
+        </div>
+        <p class="fine-print">Online accounts, payments and booking open with the next release — plan details above are previews with sample prices.</p>
       </div>
     </section>
 
@@ -140,8 +421,8 @@
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <p>© <span id="year">2026</span> Sisters Lounge Exclusive. A private community.</p>
-      <p class="footer-note">Made with care, for sisters, by sisters.</p>
+      <p>© <span id="year">2026</span> Sisters Lounge · Ilorin. All rights reserved.</p>
+      <p class="footer-note">Sisters Lounge Exclusive — salon subscriptions, booking &amp; hair care.</p>
     </div>
   </footer>
 
