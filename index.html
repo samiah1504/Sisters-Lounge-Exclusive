@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sisters Lounge Exclusive — a private, sisters-only community for connection, learning, and support.">
+  <title>Sisters Lounge Exclusive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a class="brand" href="#top">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        Sisters Lounge <em>Exclusive</em>
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
+        <span class="sr-only">Toggle menu</span>
+        <span class="nav-toggle-bar" aria-hidden="true"></span>
+      </button>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="#about">About</a></li>
+        <li><a href="#offerings">What We Offer</a></li>
+        <li><a href="#guidelines">Guidelines</a></li>
+        <li><a class="btn btn-small" href="#join">Request to Join</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="top">
+
+    <section class="hero">
+      <div class="container hero-inner">
+        <p class="hero-eyebrow">A private, sisters-only space</p>
+        <h1>A lounge of your own,<br>among sisters who understand.</h1>
+        <p class="hero-lead">
+          Sisters Lounge Exclusive is a warm, moderated community where sisters
+          gather to learn, share, and support one another — away from the noise
+          of public social media.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#join">Request to Join</a>
+          <a class="btn btn-ghost" href="#about">Learn more</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="container narrow">
+        <h2>About the Lounge</h2>
+        <p>
+          We started Sisters Lounge Exclusive with a simple idea: sisters
+          deserve a space that is <strong>private</strong>,
+          <strong>positive</strong>, and <strong>purposeful</strong>. Every
+          member is verified, every conversation is moderated with care, and
+          everything shared in the lounge stays in the lounge.
+        </p>
+        <p>
+          Whether you are looking for meaningful friendships, a study circle,
+          honest advice, or simply a comfortable place to unwind, there is a
+          seat here for you.
+        </p>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="offerings">
+      <div class="container">
+        <h2>What We Offer</h2>
+        <div class="card-grid">
+          <article class="card">
+            <h3>Weekly Circles</h3>
+            <p>Regular study and reflection circles, led by sisters, at a
+              relaxed pace that fits real life.</p>
+          </article>
+          <article class="card">
+            <h3>Book Club</h3>
+            <p>One book a month, chosen together — with a cozy discussion
+              thread and a live wrap-up chat.</p>
+          </article>
+          <article class="card">
+            <h3>Support &amp; Advice</h3>
+            <p>A confidential space to ask questions and get encouragement
+              from sisters who have been there.</p>
+          </article>
+          <article class="card">
+            <h3>Events &amp; Meetups</h3>
+            <p>Online workshops and, where members are close by, small
+              in-person gatherings.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="guidelines">
+      <div class="container narrow">
+        <h2>Community Guidelines</h2>
+        <ul class="guidelines">
+          <li><strong>Sisters only.</strong> Membership is verified and the
+            lounge is never open to the public.</li>
+          <li><strong>Kindness first.</strong> Disagreement is welcome;
+            disrespect is not.</li>
+          <li><strong>Privacy is sacred.</strong> Nothing shared inside the
+            lounge may be shared outside it.</li>
+          <li><strong>No promotion without permission.</strong> Ask a
+            moderator before sharing products or services.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="join">
+      <div class="container narrow">
+        <h2>Request to Join</h2>
+        <p>
+          Tell us a little about yourself and a moderator will reach out.
+          Requests are reviewed personally — please allow a few days.
+        </p>
+        <form class="join-form" id="join-form" novalidate>
+          <div class="field">
+            <label for="name">Your name</label>
+            <input type="text" id="name" name="name" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" autocomplete="email" required>
+          </div>
+          <div class="field">
+            <label for="message">How did you hear about us, and what are you
+              hoping to find here?</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Send request</button>
+          <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year">2026</span> Sisters Lounge Exclusive. A private community.</p>
+      <p class="footer-note">Made with care, for sisters, by sisters.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
