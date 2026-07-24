@@ -1,0 +1,60 @@
+import { expect, test } from "@playwright/test";
+
+/**
+ * Public mobile flows — run without a Supabase project (pages degrade to
+ * honest empty states, navigation and layout must still work).
+ */
+
+test("homepage renders mobile-first with correct positioning", async ({ page }) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: /healthy hair care, made consistent/i }),
+  ).toBeVisible();
+  await expect(page.getByText(/monthly hair-care membership/i)).toBeVisible();
+
+  // No horizontal scrolling on mobile.
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(0);
+
+  // No community-era concepts anywhere.
+  await expect(page.getByText(/request to join/i)).toHaveCount(0);
+  await expect(page.getByText(/sisters-only space/i)).toHaveCount(0);
+});
+
+test("browse plans on mobile", async ({ page }) => {
+  await page.goto("/plans");
+  await expect(page.getByRole("heading", { name: /subscription plans/i })).toBeVisible();
+  await expect(page.getByText(/visits must be at least seven days apart/i)).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(0);
+});
+
+test("compare plans page renders", async ({ page }) => {
+  await page.goto("/plans/compare");
+  await expect(page.getByRole("heading", { name: /compare plans/i })).toBeVisible();
+});
+
+test("mobile menu opens and navigates", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /toggle menu/i }).click();
+  await expect(
+    page.getByRole("link", { name: "Subscription Plans", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Login", exact: true }).click();
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByLabel(/email address/i)).toBeVisible();
+});
+
+test("customer area redirects anonymous users to login", async ({ page }) => {
+  await page.goto("/app");
+  await expect(page).toHaveURL(/\/login/);
+});
+
+test("admin area redirects anonymous users to login", async ({ page }) => {
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/\/login/);
+});

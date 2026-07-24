@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  /* Sisters Lounge pink-and-gold design system (gold = accent only) */
+  --color-brand-50: #fdf3f8;
+  --color-brand-100: #fbe4ef;
+  --color-brand-200: #f5c6de;
+  --color-brand-300: #eb9cc4;
+  --color-brand-400: #d96ba0;
+  --color-brand-500: #c2417d;
+  --color-brand-600: #a72c66;
+  --color-brand-700: #8c2154;
+  --color-brand-800: #6b1940;
+  --color-brand-900: #4a1230;
+
+  --color-gold-100: #f7ecd4;
+  --color-gold-300: #e8c98a;
+  --color-gold-400: #d9ae55;
+  --color-gold-500: #c99a3d;
+  --color-gold-600: #b8862b;
+  --color-gold-700: #96691f;
+
+  --color-ink: #33101f;
+  --color-ink-soft: #6f4a5c;
+  --color-cream: #fffafc;
+  --color-line: #f0d7e3;
+
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --shadow-card: 0 8px 28px rgba(74, 18, 48, 0.1);
+  --radius-card: 16px;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+/* Hide scrollbars on horizontal chip rows (content stays scrollable) */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Gold underline used on section headings */
+.heading-rule::after {
+  content: "";
+  display: block;
+  width: 52px;
+  height: 3px;
+  margin-top: 0.5rem;
+  background: var(--color-gold-400);
+  border-radius: 2px;
+}

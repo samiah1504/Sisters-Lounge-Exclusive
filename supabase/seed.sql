@@ -1,0 +1,397 @@
+-- Development seed data. DEV/TEST ONLY — no real customer data.
+-- Fixed UUIDs (prefix 11111111/22222222/…) keep references readable.
+-- On hosted Supabase, create the auth users first with
+-- scripts/create-dev-users.ts (service role), then run this file.
+
+begin;
+
+-- ------------------------------------------------------------------- users --
+-- Local/dev: rows in auth.users trigger profile creation.
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('11111111-0000-0000-0000-000000000001', 'admin@sisterslounge.test', '{"full_name":"Salon Admin"}'),
+  ('11111111-0000-0000-0000-000000000002', 'amina.stylist@sisterslounge.test', '{"full_name":"Amina Stylist"}'),
+  ('11111111-0000-0000-0000-000000000003', 'maryam@customer.test', '{"full_name":"Maryam Bello"}'),
+  ('11111111-0000-0000-0000-000000000004', 'khadija@customer.test', '{"full_name":"Khadija Yusuf"}'),
+  ('11111111-0000-0000-0000-000000000005', 'fatima@customer.test', '{"full_name":"Fatima Abdullahi"}'),
+  ('11111111-0000-0000-0000-000000000006', 'aisha.parent@customer.test', '{"full_name":"Aisha Ibrahim"}'),
+  ('11111111-0000-0000-0000-000000000007', 'zainab@customer.test', '{"full_name":"Zainab Suleiman"}')
+on conflict (id) do nothing;
+
+update public.profiles set role = 'admin', phone = '+2348030000001' where id = '11111111-0000-0000-0000-000000000001';
+update public.profiles set role = 'staff', phone = '+2348030000002' where id = '11111111-0000-0000-0000-000000000002';
+update public.profiles set phone = '+234803000000' || (right(id::text, 1)) where role = 'customer';
+
+-- Staff/admin do not need customer profiles (auto-created before role change).
+delete from public.customer_profiles where profile_id in
+  (select id from public.profiles where role in ('admin', 'staff'));
+
+-- Stylist skills + working hours (Mon-Sat, 9-6).
+insert into public.stylist_skills (staff_profile_id, skill) values
+  ('11111111-0000-0000-0000-000000000002', 'natural-hair'),
+  ('11111111-0000-0000-0000-000000000002', 'kids-hair'),
+  ('11111111-0000-0000-0000-000000000002', 'colouring');
+insert into public.staff_working_hours (staff_profile_id, day_of_week, start_time, end_time)
+select '11111111-0000-0000-0000-000000000002', d, '09:00', '18:00' from generate_series(1, 6) d;
+
+-- Complete customer profiles so booking readiness passes.
+update public.customer_profiles cp set
+  whatsapp_number = p.phone,
+  address = '12 Unity Road', city = 'Ilorin', state = 'Kwara',
+  service_area = 'ilorin', service_area_confirmed = true,
+  marketing_consent = true
+from public.profiles p
+where cp.profile_id = p.id and p.role = 'customer';
+
+-- Children for Aisha (parent with two children).
+insert into public.children (id, customer_id, full_name, date_of_birth, gender, allergies, hair_scalp_notes)
+select ('22222222-0000-0000-0000-00000000000' || n)::uuid,
+       (select cp.id from public.customer_profiles cp join public.profiles p on p.id = cp.profile_id
+        where p.email = 'aisha.parent@customer.test'),
+       child_name, dob, 'female', allergy, notes
+from (values
+  ('1', 'Hafsat Ibrahim', '2018-03-14'::date, 'None known', 'Thick 4c hair, tender scalp'),
+  ('2', 'Sumayya Ibrahim', '2020-11-02'::date, 'Sensitive to shea butter', 'Fine curls, keeps protective styles well')
+) as c(n, child_name, dob, allergy, notes);
+
+-- -------------------------------------------------------------- categories --
+insert into public.subscription_categories
+  (id, name, slug, short_description, service_location_type, display_order, eligibility_notes) values
+  ('33333333-0000-0000-0000-000000000001', 'Adult', 'adult',
+   'Monthly plans for adults who want consistent salon care.', 'salon', 1, ''),
+  ('33333333-0000-0000-0000-000000000002', 'Kids', 'kids',
+   'Gentle plans for children, managed from a parent account.', 'salon', 2,
+   'For children aged 12 and under.'),
+  ('33333333-0000-0000-0000-000000000003', 'Undergraduate', 'undergraduate',
+   'Student-friendly pricing for consistent care on a budget.', 'salon', 3,
+   'A valid student ID is required at your first visit.'),
+  ('33333333-0000-0000-0000-000000000004', 'Home Service', 'home-service',
+   'A Sisters Lounge stylist comes to you — within Ilorin.', 'home', 4,
+   'Available only within Ilorin for now.');
+
+-- ---------------------------------------------------------------- services --
+insert into public.services (id, name, slug, description, category, estimated_duration_minutes,
+                             eligible_age_group, salon_available, home_available, display_order) values
+  ('44444444-0000-0000-0000-000000000001', 'Wash & Deep Condition', 'wash-deep-condition',
+   'Cleanse, deep condition and blow-out.', 'care', 60, 'all', true, true, 1),
+  ('44444444-0000-0000-0000-000000000002', 'Protective Styling', 'protective-styling',
+   'Braids, twists or cornrows to protect and retain length.', 'styling', 120, 'all', true, true, 2),
+  ('44444444-0000-0000-0000-000000000003', 'Deep Treatment & Steam', 'deep-treatment-steam',
+   'Intensive treatment with steam for maximum absorption.', 'treatment', 75, 'all', true, false, 3),
+  ('44444444-0000-0000-0000-000000000004', 'Kids Wash & Style', 'kids-wash-style',
+   'Gentle wash, detangle and simple style for children.', 'kids', 60, 'children', true, true, 4),
+  ('44444444-0000-0000-0000-000000000005', 'Natural Styling', 'natural-styling',
+   'Twist-outs, updos and everyday natural styles.', 'styling', 90, 'adults', true, true, 5);
+
+-- -------------------------------------------------------------------- plans --
+insert into public.subscription_plans
+  (id, organisation_id, category_id, name, slug, plan_code, tier_label, short_description,
+   monthly_price_kobo, visits_included, min_visit_interval_days, location_type,
+   eligible_age_group, is_featured, display_order, status, terms) values
+  ('55555555-0000-0000-0000-000000000001', (select id from public.organisations limit 1),
+   '33333333-0000-0000-0000-000000000001', 'Basic', 'basic', 'SL-AD-BASIC', 'Basic',
+   'Essential monthly care — wash, condition and simple styling.',
+   1500000, 2, 7, 'salon', 'adults', false, 1, 'active',
+   'Visits expire at cycle end and cannot roll over. Visits must be at least 7 days apart.'),
+  ('55555555-0000-0000-0000-000000000002', (select id from public.organisations limit 1),
+   '33333333-0000-0000-0000-000000000001', 'Deluxe', 'deluxe', 'SL-AD-DELUXE', 'Deluxe',
+   'A fuller routine with monthly treatments for steady growth.',
+   2500000, 3, 7, 'salon', 'adults', true, 2, 'active',
+   'Visits expire at cycle end and cannot roll over. Visits must be at least 7 days apart.'),
+  ('55555555-0000-0000-0000-000000000003', (select id from public.organisations limit 1),
+   '33333333-0000-0000-0000-000000000001', 'Premium', 'premium', 'SL-AD-PREMIUM', 'Premium',
+   'The complete Sisters Lounge experience, every week.',
+   4000000, 4, 7, 'salon', 'adults', false, 3, 'active',
+   'Visits expire at cycle end and cannot roll over. Visits must be at least 7 days apart.'),
+  ('55555555-0000-0000-0000-000000000004', (select id from public.organisations limit 1),
+   '33333333-0000-0000-0000-000000000003', 'Undergraduate', 'undergraduate-plan', 'SL-UG-BASIC', 'Basic',
+   'Student-friendly pricing for consistent monthly care.',
+   1000000, 2, 7, 'salon', 'adults', false, 4, 'active',
+   'Valid student ID required. Visits expire at cycle end.'),
+  ('55555555-0000-0000-0000-000000000005', (select id from public.organisations limit 1),
+   '33333333-0000-0000-0000-000000000002', 'Kids', 'kids-plan', 'SL-KD-BASIC', 'Basic',
+   'Gentle monthly care for children, managed by a parent.',
+   1200000, 2, 7, 'salon', 'children', false, 5, 'active',
+   'For children 12 and under. Visits expire at cycle end.'),
+  ('55555555-0000-0000-0000-000000000006', (select id from public.organisations limit 1),
+   '33333333-0000-0000-0000-000000000004', 'Home Service', 'home-service-plan', 'SL-HM-BASIC', 'Deluxe',
+   'Full service at your home — tools and products brought along.',
+   3000000, 2, 7, 'home', 'all', false, 6, 'active',
+   'Available within Ilorin only. Visits expire at cycle end.');
+
+-- Included services per plan.
+insert into public.subscription_plan_services (plan_id, service_id, relation) values
+  ('55555555-0000-0000-0000-000000000001', '44444444-0000-0000-0000-000000000001', 'included'),
+  ('55555555-0000-0000-0000-000000000001', '44444444-0000-0000-0000-000000000002', 'optional'),
+  ('55555555-0000-0000-0000-000000000002', '44444444-0000-0000-0000-000000000001', 'included'),
+  ('55555555-0000-0000-0000-000000000002', '44444444-0000-0000-0000-000000000002', 'included'),
+  ('55555555-0000-0000-0000-000000000002', '44444444-0000-0000-0000-000000000003', 'included'),
+  ('55555555-0000-0000-0000-000000000003', '44444444-0000-0000-0000-000000000001', 'included'),
+  ('55555555-0000-0000-0000-000000000003', '44444444-0000-0000-0000-000000000002', 'included'),
+  ('55555555-0000-0000-0000-000000000003', '44444444-0000-0000-0000-000000000003', 'included'),
+  ('55555555-0000-0000-0000-000000000003', '44444444-0000-0000-0000-000000000005', 'included'),
+  ('55555555-0000-0000-0000-000000000004', '44444444-0000-0000-0000-000000000001', 'included'),
+  ('55555555-0000-0000-0000-000000000005', '44444444-0000-0000-0000-000000000004', 'included'),
+  ('55555555-0000-0000-0000-000000000006', '44444444-0000-0000-0000-000000000001', 'included'),
+  ('55555555-0000-0000-0000-000000000006', '44444444-0000-0000-0000-000000000002', 'included');
+
+-- ------------------------------------------------------------ extra services --
+insert into public.extra_service_categories (id, name, slug, display_order) values
+  ('66666666-0000-0000-0000-000000000001', 'Beauty', 'beauty', 1),
+  ('66666666-0000-0000-0000-000000000002', 'Hair Extras', 'hair-extras', 2),
+  ('66666666-0000-0000-0000-000000000003', 'Treatments', 'treatments', 3);
+
+insert into public.extra_services
+  (id, name, slug, short_description, price_kobo, estimated_duration_minutes,
+   category_id, is_featured, salon_available, home_available, payment_requirement, display_order) values
+  ('77777777-0000-0000-0000-000000000001', 'Henna', 'henna',
+   'Traditional henna art for hands or feet.', 500000, 45,
+   '66666666-0000-0000-0000-000000000001', true, true, true, 'pay_at_salon', 1),
+  ('77777777-0000-0000-0000-000000000002', 'Beading', 'beading',
+   'Beautiful beads added to braids or twists.', 300000, 30,
+   '66666666-0000-0000-0000-000000000002', false, true, true, 'pay_at_salon', 2),
+  ('77777777-0000-0000-0000-000000000003', 'Manicure', 'manicure',
+   'Neat, polished nails while you get your hair done.', 400000, 40,
+   '66666666-0000-0000-0000-000000000001', false, true, false, 'pay_at_salon', 3),
+  ('77777777-0000-0000-0000-000000000004', 'Pedicure', 'pedicure',
+   'Relaxing pedicure with a tidy finish.', 450000, 45,
+   '66666666-0000-0000-0000-000000000001', false, true, false, 'pay_at_salon', 4),
+  ('77777777-0000-0000-0000-000000000005', 'Hair Trimming', 'hair-trimming',
+   'Precise trim to keep ends healthy.', 400000, 20,
+   '66666666-0000-0000-0000-000000000002', true, true, true, 'pay_at_salon', 5),
+  ('77777777-0000-0000-0000-000000000006', 'Hair Colouring', 'hair-colouring',
+   'Professional colour — requires advance notice.', 1500000, 90,
+   '66666666-0000-0000-0000-000000000002', false, true, false, 'pay_before_confirmation', 6),
+  ('77777777-0000-0000-0000-000000000007', 'Steam Treatment', 'steam-treatment',
+   'Add a steam session for deeper hydration.', 350000, 30,
+   '66666666-0000-0000-0000-000000000003', true, true, false, 'pay_at_salon', 7);
+
+update public.extra_services set min_advance_notice_hours = 48
+where slug = 'hair-colouring';
+
+-- Hair colouring: adults only (not eligible for the Kids category).
+insert into public.extra_service_customer_eligibility (extra_service_id, category_id) values
+  ('77777777-0000-0000-0000-000000000006', '33333333-0000-0000-0000-000000000001'),
+  ('77777777-0000-0000-0000-000000000006', '33333333-0000-0000-0000-000000000003');
+
+-- ------------------------------------------------------------- consultations --
+insert into public.consultation_types
+  (name, slug, short_description, price_kobo, duration_minutes, location_type, display_order) values
+  ('General Hair Consultation', 'general-hair', 'A full review of your routine, goals and hair condition.', 500000, 30, 'salon', 1),
+  ('Hair & Scalp Assessment', 'hair-scalp-assessment', 'A closer look at scalp health, breakage and build-up.', 700000, 45, 'salon', 2),
+  ('Children''s Hair Consultation', 'childrens-hair', 'Age-appropriate care plans for your child''s hair.', 400000, 30, 'salon', 3),
+  ('Postpartum Hair Consultation', 'postpartum-hair', 'Support for shedding and regrowth after childbirth.', 600000, 45, 'virtual', 4),
+  ('Transitioning Hair Consultation', 'transitioning-hair', 'Guidance for moving from relaxed to natural hair.', 600000, 45, 'salon', 5),
+  ('Product Recommendation Consultation', 'product-recommendation', 'A personalised product line-up matched to your hair.', 350000, 20, 'virtual', 6);
+
+-- ------------------------------------------------------------------ products --
+insert into public.product_categories (id, name, slug, display_order) values
+  ('88888888-0000-0000-0000-000000000001', 'Cleanse & Condition', 'cleanse-condition', 1),
+  ('88888888-0000-0000-0000-000000000002', 'Oils & Treatments', 'oils-treatments', 2),
+  ('88888888-0000-0000-0000-000000000003', 'Kids', 'kids-products', 3),
+  ('88888888-0000-0000-0000-000000000004', 'Accessories', 'accessories', 4);
+
+insert into public.products
+  (name, slug, sku, short_description, category_id, price_kobo, subscriber_price_kobo,
+   stock_status, is_featured, age_suitability, display_order) values
+  ('Moisture Shampoo', 'moisture-shampoo', 'SL-SH-001',
+   'Sulphate-free cleansing for dry and natural hair.',
+   '88888888-0000-0000-0000-000000000001', 450000, 400000, 'in_stock', true, 'all', 1),
+  ('Deep Conditioner', 'deep-conditioner', 'SL-CO-001',
+   'Rich weekly conditioner for softness and slip.',
+   '88888888-0000-0000-0000-000000000001', 480000, 430000, 'in_stock', true, 'all', 2),
+  ('Leave-in Conditioner', 'leave-in-conditioner', 'SL-LI-001',
+   'Daily moisture without build-up.',
+   '88888888-0000-0000-0000-000000000001', 520000, 470000, 'in_stock', false, 'all', 3),
+  ('Nourishing Hair Oil', 'nourishing-hair-oil', 'SL-OI-001',
+   'Sealing blend with jojoba and castor oil.',
+   '88888888-0000-0000-0000-000000000002', 350000, 320000, 'in_stock', false, 'all', 4),
+  ('Scalp Treatment Serum', 'scalp-treatment-serum', 'SL-TR-001',
+   'Soothing serum for itchy or flaky scalps.',
+   '88888888-0000-0000-0000-000000000002', 600000, 550000, 'low_stock', false, 'all', 5),
+  ('Gentle Kids Shampoo', 'gentle-kids-shampoo', 'SL-KD-001',
+   'Tear-free wash for little curls.',
+   '88888888-0000-0000-0000-000000000003', 300000, 270000, 'in_stock', false, 'children', 6),
+  ('Satin Bonnet', 'satin-bonnet', 'SL-AC-001',
+   'Protects styles and keeps moisture in overnight.',
+   '88888888-0000-0000-0000-000000000004', 150000, 150000, 'in_stock', false, 'all', 7);
+
+-- --------------------------------------------------------- recommendations --
+insert into public.recommendation_rules (id, name, context, badge_label, priority) values
+  ('99999999-0000-0000-0000-000000000001', 'Booking add-ons everyone loves', 'booking',
+   'Customers often add', 10),
+  ('99999999-0000-0000-0000-000000000002', 'Deluxe visit enhancers', 'plan_detail',
+   'Recommended for this plan', 20),
+  ('99999999-0000-0000-0000-000000000003', 'After-visit product care', 'post_appointment',
+   'Keep the result at home', 10);
+
+insert into public.recommendation_targets (rule_id, target_type, target_id) values
+  ('99999999-0000-0000-0000-000000000001', 'all', null),
+  ('99999999-0000-0000-0000-000000000002', 'plan', '55555555-0000-0000-0000-000000000002'),
+  ('99999999-0000-0000-0000-000000000003', 'all', null);
+
+insert into public.recommendation_items (rule_id, item_type, item_id, display_order) values
+  ('99999999-0000-0000-0000-000000000001', 'extra_service', '77777777-0000-0000-0000-000000000001', 1),
+  ('99999999-0000-0000-0000-000000000001', 'extra_service', '77777777-0000-0000-0000-000000000005', 2),
+  ('99999999-0000-0000-0000-000000000002', 'extra_service', '77777777-0000-0000-0000-000000000007', 1),
+  ('99999999-0000-0000-0000-000000000003', 'product',
+   (select id from public.products where slug = 'leave-in-conditioner'), 1),
+  ('99999999-0000-0000-0000-000000000003', 'product',
+   (select id from public.products where slug = 'nourishing-hair-oil'), 2);
+
+-- ------------------------------------------------- subscriptions & bookings --
+-- Helper CTE-style: look up customer ids by email.
+-- Maryam: active Deluxe subscription, one upcoming appointment.
+-- Khadija: active Basic, one visit remaining (one consumed).
+-- Fatima: active Basic, unused visits, no bookings (retention target).
+-- Aisha: two children, one Kids subscription per child.
+-- Zainab: expired subscription + pending Basic selection + missed appointment.
+
+do $seed$
+declare
+  v_org uuid := (select id from public.organisations limit 1);
+  v_maryam uuid; v_khadija uuid; v_fatima uuid; v_aisha uuid; v_zainab uuid;
+  v_child1 uuid := '22222222-0000-0000-0000-000000000001';
+  v_child2 uuid := '22222222-0000-0000-0000-000000000002';
+  v_sub uuid; v_cycle uuid; v_appt uuid; v_ent uuid;
+  v_today date := (now() at time zone 'Africa/Lagos')::date;
+  i integer;
+begin
+  select cp.id into v_maryam from public.customer_profiles cp
+    join public.profiles p on p.id = cp.profile_id where p.email = 'maryam@customer.test';
+  select cp.id into v_khadija from public.customer_profiles cp
+    join public.profiles p on p.id = cp.profile_id where p.email = 'khadija@customer.test';
+  select cp.id into v_fatima from public.customer_profiles cp
+    join public.profiles p on p.id = cp.profile_id where p.email = 'fatima@customer.test';
+  select cp.id into v_aisha from public.customer_profiles cp
+    join public.profiles p on p.id = cp.profile_id where p.email = 'aisha.parent@customer.test';
+  select cp.id into v_zainab from public.customer_profiles cp
+    join public.profiles p on p.id = cp.profile_id where p.email = 'zainab@customer.test';
+
+  -- ---- Maryam: Deluxe active, cycle started 10 days ago -------------------
+  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source)
+  values (v_maryam, '55555555-0000-0000-0000-000000000002',
+          public.latest_plan_version('55555555-0000-0000-0000-000000000002'), 'active', 'manual')
+  returning id into v_sub;
+  insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included)
+  values (v_sub, 1, v_today - 10, v_today - 10 + interval '1 month', 3) returning id into v_cycle;
+  for i in 1..3 loop
+    insert into public.visit_entitlements (cycle_id, seq_number) values (v_cycle, i);
+  end loop;
+
+  -- Completed appointment 8 days ago (visit consumed).
+  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id,
+    starts_at, ends_at, duration_minutes, status, completed_at)
+  values (v_maryam, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001',
+    (v_today - 8 + time '10:00') at time zone 'Africa/Lagos',
+    (v_today - 8 + time '11:00') at time zone 'Africa/Lagos', 60, 'completed', now() - interval '8 days')
+  returning id into v_appt;
+  select id into v_ent from public.visit_entitlements where cycle_id = v_cycle and seq_number = 1;
+  update public.visit_entitlements set status = 'consumed', consumed_at = now() - interval '8 days' where id = v_ent;
+  insert into public.visit_reservations (entitlement_id, appointment_id, status, released_at)
+  values (v_ent, v_appt, 'converted', now() - interval '8 days');
+
+  -- Upcoming appointment in 3 days with henna + trimming add-ons (reserved).
+  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id,
+    starts_at, ends_at, duration_minutes, status, addon_total_kobo,
+    stylist_profile_id, customer_notes)
+  values (v_maryam, v_sub, v_cycle, '44444444-0000-0000-0000-000000000003',
+    (v_today + 3 + time '10:00') at time zone 'Africa/Lagos',
+    (v_today + 3 + time '12:20') at time zone 'Africa/Lagos', 140, 'assigned', 900000,
+    '11111111-0000-0000-0000-000000000002', 'Please use the rose oil if available')
+  returning id into v_appt;
+  select id into v_ent from public.visit_entitlements where cycle_id = v_cycle and seq_number = 2;
+  update public.visit_entitlements set status = 'reserved' where id = v_ent;
+  insert into public.visit_reservations (entitlement_id, appointment_id) values (v_ent, v_appt);
+  insert into public.appointment_extra_services
+    (appointment_id, extra_service_id, price_kobo, duration_minutes, payment_requirement) values
+    (v_appt, '77777777-0000-0000-0000-000000000001', 500000, 45, 'pay_at_salon'),
+    (v_appt, '77777777-0000-0000-0000-000000000005', 400000, 20, 'pay_at_salon');
+
+  -- ---- Khadija: Basic active, one visit left ------------------------------
+  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source)
+  values (v_khadija, '55555555-0000-0000-0000-000000000001',
+          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'active', 'manual')
+  returning id into v_sub;
+  insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included)
+  values (v_sub, 1, v_today - 20, v_today - 20 + interval '1 month', 2) returning id into v_cycle;
+  insert into public.visit_entitlements (cycle_id, seq_number, status, consumed_at)
+  values (v_cycle, 1, 'consumed', now() - interval '12 days');
+  insert into public.visit_entitlements (cycle_id, seq_number) values (v_cycle, 2);
+  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id,
+    starts_at, ends_at, duration_minutes, status, completed_at)
+  values (v_khadija, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001',
+    (v_today - 12 + time '11:00') at time zone 'Africa/Lagos',
+    (v_today - 12 + time '12:00') at time zone 'Africa/Lagos', 60, 'completed', now() - interval '12 days');
+
+  -- ---- Fatima: Basic active, nothing booked (retention target) ------------
+  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source)
+  values (v_fatima, '55555555-0000-0000-0000-000000000001',
+          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'active', 'manual')
+  returning id into v_sub;
+  insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included)
+  values (v_sub, 1, v_today - 9, v_today - 9 + interval '1 month', 2) returning id into v_cycle;
+  insert into public.visit_entitlements (cycle_id, seq_number) values (v_cycle, 1), (v_cycle, 2);
+
+  -- ---- Aisha: Kids subscriptions for both children ------------------------
+  for i in 1..2 loop
+    insert into public.subscriptions (customer_id, child_id, plan_id, plan_version_id, status, activation_source)
+    values (v_aisha, case when i = 1 then v_child1 else v_child2 end,
+            '55555555-0000-0000-0000-000000000005',
+            public.latest_plan_version('55555555-0000-0000-0000-000000000005'), 'active', 'manual')
+    returning id into v_sub;
+    insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included)
+    values (v_sub, 1, v_today - 5, v_today - 5 + interval '1 month', 2) returning id into v_cycle;
+    insert into public.visit_entitlements (cycle_id, seq_number) values (v_cycle, 1), (v_cycle, 2);
+  end loop;
+
+  -- Upcoming kids appointment for Hafsat in 5 days.
+  select s.id, c.id into v_sub, v_cycle from public.subscriptions s
+    join public.subscription_cycles c on c.subscription_id = s.id
+    where s.child_id = v_child1;
+  insert into public.appointments (customer_id, child_id, subscription_id, cycle_id, service_id,
+    starts_at, ends_at, duration_minutes, status)
+  values (v_aisha, v_child1, v_sub, v_cycle, '44444444-0000-0000-0000-000000000004',
+    (v_today + 5 + time '12:00') at time zone 'Africa/Lagos',
+    (v_today + 5 + time '13:00') at time zone 'Africa/Lagos', 60, 'confirmed')
+  returning id into v_appt;
+  select id into v_ent from public.visit_entitlements where cycle_id = v_cycle and seq_number = 1;
+  update public.visit_entitlements set status = 'reserved' where id = v_ent;
+  insert into public.visit_reservations (entitlement_id, appointment_id) values (v_ent, v_appt);
+
+  -- ---- Zainab: expired subscription, missed appointment, pending selection -
+  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source)
+  values (v_zainab, '55555555-0000-0000-0000-000000000001',
+          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'expired', 'manual')
+  returning id into v_sub;
+  insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included, status)
+  values (v_sub, 1, v_today - 45, v_today - 15, 2, 'expired') returning id into v_cycle;
+  insert into public.visit_entitlements (cycle_id, seq_number, status) values
+    (v_cycle, 1, 'expired'), (v_cycle, 2, 'expired');
+  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id,
+    starts_at, ends_at, duration_minutes, status)
+  values (v_zainab, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001',
+    (v_today - 20 + time '10:00') at time zone 'Africa/Lagos',
+    (v_today - 20 + time '11:00') at time zone 'Africa/Lagos', 60, 'missed');
+
+  insert into public.pending_plan_selections (customer_id, plan_id, plan_version_id)
+  values (v_zainab, '55555555-0000-0000-0000-000000000001',
+          public.latest_plan_version('55555555-0000-0000-0000-000000000001'));
+  insert into public.pending_payment_intents (purpose, customer_id, pending_selection_id, amount_kobo)
+  values ('subscription_activation', v_zainab,
+          (select id from public.pending_plan_selections where customer_id = v_zainab and status = 'pending_payment'),
+          1500000);
+
+  -- ---- Favourites + retention prompts -------------------------------------
+  insert into public.favourites (customer_id, item_type, item_id) values
+    (v_maryam, 'product', (select id from public.products where slug = 'leave-in-conditioner')),
+    (v_maryam, 'extra_service', '77777777-0000-0000-0000-000000000001'),
+    (v_fatima, 'product', (select id from public.products where slug = 'satin-bonnet'));
+
+  perform public.fn_generate_retention_prompts(v_maryam);
+  perform public.fn_generate_retention_prompts(v_khadija);
+  perform public.fn_generate_retention_prompts(v_fatima);
+  perform public.fn_generate_retention_prompts(v_aisha);
+  perform public.fn_generate_retention_prompts(v_zainab);
+end $seed$;
+
+commit;
