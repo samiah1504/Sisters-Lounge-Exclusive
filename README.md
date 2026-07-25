@@ -32,6 +32,8 @@ empty states and protected areas redirect to login.
    `supabase/migrations/` through the SQL editor, in order).
 3. Dev data (optional): run `npx tsx scripts/create-dev-users.ts` with the
    service-role key, then run `supabase/seed.sql`.
+4. For Admin → Staff (creating staff/stylist logins from the app), also set
+   `SUPABASE_SERVICE_ROLE_KEY` as a server-side env var in your deployment.
 
 ### Local database verification (no Supabase account needed)
 
