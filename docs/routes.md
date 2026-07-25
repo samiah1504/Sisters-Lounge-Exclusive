@@ -27,6 +27,9 @@
 | `/app/consultations`, `/app/consultations/[slug]/book` | Browse + pending consultation booking |
 | `/app/products`, `/app/products/[slug]` | Catalogue with search/filter/favourites (no checkout) |
 | `/app/favourites` | Saved products, extras, consultations |
+| `/app/support` | "Chat with Your Salon Manager" — conversation list, unread badges, WhatsApp fallback |
+| `/app/support/new` | Start a conversation (11 topics) |
+| `/app/support/[id]` | Chat thread (15s refresh, resolve/reopen); internal notes never appear |
 
 ## Admin — `/admin` (role: admin)
 
@@ -45,6 +48,18 @@
 | `/admin/products` (+`/new`, `/[id]`) | Product CRUD |
 | `/admin/recommendations` (+`/new`, `/[id]`) | Recommendation rule CRUD |
 | `/admin/settings` | Booking rules, opening/weekend hours, blackout dates, service areas |
+| `/admin/operations` | Operations dashboard: subscription health, capacity, upselling, inventory, expenses, support |
+| `/admin/inventory` (+`/new`, `/[id]`) | Item register with live levels; detail = movement form + full ledger |
+| `/admin/inventory/receiving` | Stock receipts (draft → confirm posts to ledger once) |
+| `/admin/inventory/counts` | Physical counts with variance review/approval |
+| `/admin/inventory/alerts` | Out-of-stock, low, expired/expiring, high-value adjustments |
+| `/admin/inventory/templates` | Per-service consumption templates (services + extras) |
+| `/admin/inventory/categories`, `/admin/inventory/settings` | Category CRUD; expiry window, negative-stock, adjustment threshold |
+| `/admin/suppliers` | Supplier CRUD; bank details restricted to admins |
+| `/admin/equipment` | Equipment register, condition changes, maintenance logs |
+| `/admin/expenses` (+`/recurring`, `/dashboard`, `/categories`) | Expense workflow (draft→approval→paid/void), recurring templates, spending dashboard, categories + threshold |
+| `/admin/support` (+`/[id]`, `/replies`) | Staff inbox with filters; thread with internal notes + saved replies |
+| `/admin/capacity` | Utilisation, warnings, per-plan limits, capacity settings |
 
 ## Staff — `/staff` (role: staff or admin)
 

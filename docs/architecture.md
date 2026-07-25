@@ -65,6 +65,26 @@ Browser (mobile-first UI)
    public pages render with empty states and protected pages redirect to
    login, so the app builds and boots in CI with no secrets.
 
+8. **Inventory is a ledger, not a counter (Phase 3).** Quantities on
+   `inventory_items` are trigger-guarded; the only write path is
+   `fn_post_stock_movement`, and `inventory_movements` is immutable. Guard
+   triggers use transaction-local GUCs (`app.stock_internal`,
+   `app.expense_internal`) set inside the definer functions, so not even an
+   admin can bypass the ledger with a direct UPDATE. Consumption is
+   staff-confirmed per completed appointment — never auto-deducted.
+
+9. **Chat correctness lives in triggers (Phase 3).** Support-message
+   triggers force a truthful `sender_type`, strip the internal flag from
+   customer messages, block posts into closed conversations and maintain
+   counters/read cursors — RLS + triggers guarantee the rules no matter what
+   client code does.
+
+10. **Capacity is computed, not cached (Phase 3).** Utilisation and warnings
+    derive live from entitlements, opening hours and slot settings;
+    `fn_check_activation_capacity` hard-stops new activations at plan,
+    category, global and home-service limits unless an admin overrides with
+    an audited reason.
+
 ## Error contract
 
 SQL functions raise errors prefixed with stable codes
@@ -76,10 +96,10 @@ New codes must be added in both places.
 
 | Suite | Runs where | Proves |
 | ----- | ---------- | ------ |
-| `src/**/*.test.ts` (39) | anywhere | pure rules: interval, durations, eligibility, transitions, recommendations |
-| `tests/integration` (36) | local Postgres 16 (`npm run db:reset`) | migrations apply; RLS isolation; booking/reservation/consumption; 7-day rule; capacity; audit |
-| `e2e/public.spec.ts` (6) | any dev server | mobile layout, no overflow, nav, auth redirects |
-| `e2e/authenticated.spec.ts` (8) | live Supabase + seed (`E2E_SUPABASE=1`) | full customer/admin flows |
+| `src/**/*.test.ts` (46) | anywhere | pure rules: interval, durations, eligibility, transitions, recommendations, stock levels, variance, capacity math |
+| `tests/integration` (64) | local Postgres 16 (`npm run db:reset`) | migrations apply; RLS isolation; booking/reservation/consumption; 7-day rule; stock ledger; expense workflow; chat privacy; capacity limits; audit |
+| `e2e/public.spec.ts` + `e2e/phase3.spec.ts` (7 public) | any dev server | mobile layout, no overflow, nav, auth redirects incl. operations pages |
+| `e2e/authenticated.spec.ts` + `e2e/phase3.spec.ts` (15) | live Supabase + seed (`E2E_SUPABASE=1`) | full customer/admin/operations flows |
 
 The integration harness impersonates users exactly like PostgREST does
 (`SET ROLE` + `request.jwt.claims`), so RLS results match production.

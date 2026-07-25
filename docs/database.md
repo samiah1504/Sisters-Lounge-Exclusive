@@ -20,6 +20,13 @@ never hard-deleted.
 | `0009_business_functions.sql` | all lifecycle functions (below) |
 | `0010_retention_availability.sql` | `fn_generate_retention_prompts`, `fn_get_available_slots` |
 | `0011_rls.sql` | RLS enablement + every policy |
+| `0012_inventory.sql` | `inventory_units`, `inventory_categories`, `suppliers`, `supplier_bank_details` (separate, admin-only), `inventory_items` (generated `quantity_available`, direct-write guard), `products.inventory_item_id`, `inventory_settings` |
+| `0013_stock_operations.sql` | `inventory_movements` (immutable ledger, 16 types), `fn_post_stock_movement`, `stock_receipts(+items)`, `fn_confirm_stock_receipt`, `stock_counts(+items)`, `fn_submit_stock_count`, `fn_review_stock_count`, `service_consumption_templates`, `appointment_inventory_usage(+items)`, `fn_post_appointment_consumption` |
+| `0014_equipment.sql` | `equipment_assets` (condition audit trigger, retire auto-unassign), `equipment_logs` |
+| `0015_expenses.sql` | `expense_categories`, `expense_settings`, `expenses` (workflow guard), `fn_expense_transition`, `recurring_expense_templates`, `fn_generate_recurring_expenses` |
+| `0016_support_chat.sql` | `support_conversations`, `support_messages` (truthful-sender + closed-conversation triggers, append-only), `support_saved_replies` |
+| `0017_capacity_permissions_rls.sql` | `subscription_capacity_settings`, `subscription_category_limits`, `capacity_overrides`, `fn_capacity_counts`, `fn_check_activation_capacity`, capacity-aware `fn_activate_manual_subscription`, 32 Phase 3 permissions + staff grants, RLS for every Phase 3 table |
+| `0018_product_stock_sync.sql` | triggers mirroring linked inventory availability into `products.stock_status` (customers never read inventory tables) |
 
 ## Status vocabularies
 
@@ -31,6 +38,10 @@ never hard-deleted.
   cancelled_salon, cancelled_admin, no_longer_eligible, expired
 - **Entitlements**: available, reserved, consumed, expired, revoked
 - **Plans**: draft, active, hidden, closed, archived
+- **Expenses**: draft, pending_approval, approved, rejected, paid, voided
+- **Stock receipts / counts**: draft, confirmed/submitted, approved, rejected, cancelled
+- **Support conversations**: open, assigned, waiting_customer, waiting_salon, resolved, closed
+- **Movement types**: opening_stock, stock_received, supplier_purchase, salon_usage, retail_sale, appointment_consumption, damage, expired_stock, theft_or_loss, manual_adjustment, return_to_supplier, customer_return, transfer, stock_count_correction, reservation, reservation_release
 
 ## Lifecycle functions (SECURITY DEFINER)
 
@@ -50,6 +61,13 @@ never hard-deleted.
 | `fn_set_renewal_opt_out(sub, bool)` | customer | opt out of next renewal only — never cancels a paid cycle |
 | `fn_generate_retention_prompts(customer)` | app (on dashboard load) | idempotent upsert of `auto:*` prompts; removes stale; keeps dismissals |
 | `fn_get_available_slots(date, location, duration)` | app | valid start times from hours/settings/blackouts/capacity — nothing hardcoded |
+| `fn_post_stock_movement(item, type, qty±, reason, ref?)` | staff (`inventory.adjust`/receive/count) | row-locked ledger post; `NEGATIVE_STOCK` guard; only way quantities change |
+| `fn_confirm_stock_receipt(receipt)` | staff (`inventory.receive`) | posts all lines once (`ALREADY_POSTED`), updates cost price |
+| `fn_submit_stock_count` / `fn_review_stock_count` | staff / approver | count workflow; high-value variances need a second approver (`SELF_APPROVAL`) |
+| `fn_post_appointment_consumption(appt, items[])` | staff (`consumption.post`) | completed appointments only, once; big deviations need a reason (`REASON_REQUIRED`) |
+| `fn_expense_transition(expense, action, reason?)` | staff/admin | submit/approve/reject/mark_paid/void; self-approval always blocked; threshold → admin only; all audited |
+| `fn_generate_recurring_expenses()` | cron/admin | idempotent draft per template + due date; advances `next_due_date` |
+| `fn_capacity_counts()` / `fn_check_activation_capacity(...)` | internal | live subscriber/visit counts; `CAPACITY_FULL` unless admin override (audited in `capacity_overrides`) |
 
 ## RLS summary
 
@@ -63,6 +81,12 @@ never hard-deleted.
   audit log are staff/admin-only.
 - **No direct INSERT/UPDATE policies** exist for appointments, entitlements
   or reservations — the definer functions are the only write path.
+- Phase 3: customers have **zero** access to inventory, suppliers, expenses,
+  equipment or capacity tables. Support conversations are owner-only for
+  customers; internal notes are filtered out by the message policy. Supplier
+  bank details live in a separate admin-only table. Inventory quantities and
+  the movement ledger are trigger-guarded — even admins go through
+  `fn_post_stock_movement`.
 
 ## Local verification
 

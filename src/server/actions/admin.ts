@@ -451,11 +451,13 @@ export async function saveProduct(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { price_naira, subscriber_price_naira, ...rest } = parsed.data;
+  const invRaw = String(formData.get("inventory_item_id") ?? "").trim();
   const row = {
     ...rest,
     price_kobo: Math.round(price_naira * 100),
     subscriber_price_kobo:
       subscriber_price_naira == null ? null : Math.round(subscriber_price_naira * 100),
+    inventory_item_id: invRaw === "" ? null : invRaw,
   };
 
   const supabase = await createClient();

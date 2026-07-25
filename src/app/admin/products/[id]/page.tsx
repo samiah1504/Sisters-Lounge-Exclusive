@@ -15,16 +15,20 @@ export default async function EditProductPage({
   await requireAdmin();
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: products }, { data: categories }] = await Promise.all([
-    supabase.from("products").select("*").eq("id", id).limit(1),
-    supabase.from("product_categories").select("id, name").order("display_order"),
-  ]);
+  const [{ data: products }, { data: categories }, { data: inventoryItems }] =
+    await Promise.all([
+      supabase.from("products").select("*").eq("id", id).limit(1),
+      supabase.from("product_categories").select("id, name").order("display_order"),
+      supabase.from("inventory_items").select("id, name, sku")
+        .eq("item_type", "retail").eq("is_active", true).order("name"),
+    ]);
   const product = products?.[0];
   if (!product) notFound();
   return (
     <div className="grid gap-4">
       <h1 className="heading-rule font-display text-2xl text-ink">Edit: {product.name}</h1>
-      <ProductForm product={product} categories={categories ?? []} />
+      <ProductForm product={product} categories={categories ?? []}
+        inventoryItems={inventoryItems ?? []} />
     </div>
   );
 }

@@ -5,8 +5,10 @@ Salon subscription, booking and hair-care management platform for
 
 Customers subscribe to a monthly salon plan, book their visits ahead, track
 remaining visits, manage plans for their children, add extra paid services,
-book paid consultations and browse hair-care products. Staff and admins
-manage subscribers, bookings, plans, stylists, retention and upselling.
+book paid consultations, browse hair-care products and chat with the salon.
+Staff and admins manage subscribers, bookings, plans, stylists, retention,
+upselling, inventory, expenses, equipment, support conversations and
+subscription capacity.
 
 ## Stack
 
@@ -42,7 +44,7 @@ local PostgreSQL 16:
 
 ```bash
 npm run db:reset          # init cluster, apply auth shim + migrations + seed
-npm run test:integration  # 36 tests: RLS isolation, booking, 7-day rule, …
+npm run test:integration  # 64 tests: RLS, booking, stock ledger, expenses, chat, capacity
 ```
 
 ## Scripts
@@ -71,6 +73,19 @@ npm run test:integration  # 36 tests: RLS isolation, booking, 7-day rule, …
 - Home service is limited to supported areas (currently Ilorin).
 - No live payments exist yet: plan selections, prepaid add-ons and paid
   consultations create **pending payment** records only.
+- Inventory quantities change **only** through the immutable stock-movement
+  ledger; appointment consumption is staff-confirmed, never auto-deducted.
+- Expenses follow draft → approval → paid/voided; nobody can approve their
+  own expense, and posted records are corrected by voiding, not editing.
+- New subscription activations hard-stop at capacity limits unless an admin
+  overrides with an audited reason.
+
+### Scheduled jobs (Supabase cron)
+
+| Function | Suggested schedule |
+| -------- | ------------------ |
+| `fn_expire_cycles()` | daily |
+| `fn_generate_recurring_expenses()` | daily |
 
 ## Documentation
 
@@ -79,3 +94,4 @@ npm run test:integration  # 36 tests: RLS isolation, booking, 7-day rule, …
 - `docs/routes.md` — route map
 - `docs/permissions.md` — role & permission matrix
 - `docs/phase-2-completion.md` — Phase 2 delivery report
+- `docs/phase-3-completion.md` — Phase 3 delivery report (operations, inventory, expenses, chat, capacity)

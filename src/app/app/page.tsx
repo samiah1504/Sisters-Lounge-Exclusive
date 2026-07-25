@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { requireCustomer } from "@/server/auth";
 import {
   getAppointments,
@@ -24,14 +25,24 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const session = await requireCustomer();
   const customerId = session.customerProfile.id;
-  const [overviews, childrenList, appointments, prompts, pendingSelection] =
+  const supabase = await createClient();
+  const [overviews, childrenList, appointments, prompts, pendingSelection, { data: convs }] =
     await Promise.all([
       getSubscriptionOverviews(customerId),
       getChildren(customerId),
       getAppointments(customerId),
       getRetentionPrompts(customerId),
       getPendingSelection(customerId),
+      supabase
+        .from("support_conversations")
+        .select("last_staff_message_at, customer_last_read_at")
+        .eq("customer_id", customerId),
     ]);
+  const unreadSupport = (convs ?? []).filter(
+    (c) =>
+      c.last_staff_message_at &&
+      (!c.customer_last_read_at || c.last_staff_message_at > c.customer_last_read_at),
+  ).length;
 
   const completion = profileCompletion({
     full_name: session.profile.full_name,
@@ -252,6 +263,27 @@ export default async function DashboardPage() {
           </ul>
         )}
       </Card>
+
+      {/* chat with the salon */}
+      <Link href="/app/support">
+        <Card className="border-brand-200 bg-brand-50/60 hover:border-brand-400">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold text-brand-900">Chat with Your Salon Manager</p>
+              <p className="mt-0.5 text-sm text-ink-soft">
+                Questions, complaints or special requests — message us any time.
+              </p>
+            </div>
+            {unreadSupport > 0 ? (
+              <span className="grid h-8 min-w-8 shrink-0 place-items-center rounded-full bg-brand-600 px-2 text-sm font-bold text-white">
+                {unreadSupport}
+              </span>
+            ) : (
+              <span className="shrink-0 text-brand-600">→</span>
+            )}
+          </div>
+        </Card>
+      </Link>
 
       {/* quick actions */}
       <div className="grid grid-cols-2 gap-3">

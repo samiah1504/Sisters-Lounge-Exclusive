@@ -6,9 +6,11 @@ import type { Product } from "@/lib/types";
 export function ProductForm({
   product,
   categories,
+  inventoryItems = [],
 }: {
   product: Product | null;
   categories: Array<{ id: string; name: string }>;
+  inventoryItems?: Array<{ id: string; name: string; sku: string }>;
 }) {
   return (
     <ActionForm
@@ -30,11 +32,22 @@ export function ProductForm({
             ))}
           </select>
         </Field>
-        <Field label="Stock status" htmlFor="stock_status">
+        <Field label="Stock status" htmlFor="stock_status"
+          hint={product?.inventory_item_id ? "Managed automatically by the linked inventory item." : undefined}>
           <select id="stock_status" name="stock_status" defaultValue={product?.stock_status ?? "in_stock"} className={inputClass}>
             <option value="in_stock">In stock</option>
             <option value="low_stock">Low stock</option>
             <option value="out_of_stock">Out of stock</option>
+          </select>
+        </Field>
+        <Field label="Linked inventory item" htmlFor="inventory_item_id"
+          hint="When linked, availability follows real stock levels.">
+          <select id="inventory_item_id" name="inventory_item_id"
+            defaultValue={product?.inventory_item_id ?? ""} className={inputClass}>
+            <option value="">Not linked</option>
+            {inventoryItems.map((i) => (
+              <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>
+            ))}
           </select>
         </Field>
         <Field label="Selling price (₦)" htmlFor="price_naira">

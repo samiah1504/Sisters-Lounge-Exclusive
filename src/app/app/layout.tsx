@@ -25,6 +25,7 @@ export default async function CustomerLayout({
             <Link href="/app/appointments" className="text-ink-soft hover:text-brand-600">Appointments</Link>
             <Link href="/app/children" className="text-ink-soft hover:text-brand-600">Children</Link>
             <Link href="/app/products" className="text-ink-soft hover:text-brand-600">Products</Link>
+            <Link href="/app/support" className="text-ink-soft hover:text-brand-600">Support</Link>
             <Link href="/app/profile" className="text-ink-soft hover:text-brand-600">Profile</Link>
           </div>
           <form action={signOut}>

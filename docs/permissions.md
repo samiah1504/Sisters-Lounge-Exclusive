@@ -37,6 +37,18 @@ Role changes are admin-only (enforced by a trigger on `profiles`, not just UI).
 | `customers.manage` | – | ✓ | profile edits, archive |
 | `customers.internal_notes` | – | ✓ | internal note read/write |
 | `customers.tags.manage` | – | ✓ | tags |
+| `inventory.view` / `inventory.receive` / `inventory.count` | ✓ | ✓ | item register, receipts, counts |
+| `inventory.manage` / `inventory.adjust` / `inventory.approve_adjustment` | – | ✓ | item CRUD, manual movements, count review |
+| `suppliers.view` | – | ✓ | supplier list (staff see via `inventory.view`) |
+| `suppliers.manage` / `suppliers.bank_details` | – | ✓ | supplier CRUD; bank details table |
+| `equipment.view` / `equipment.manage` | – | ✓ | equipment register + logs |
+| `consumption.post` | ✓ | ✓ | `fn_post_appointment_consumption` |
+| `expenses.view` / `expenses.create` / `expenses.edit_draft` / `expenses.submit` | ✓ | ✓ | expense entry + submission |
+| `expenses.approve` / `expenses.mark_paid` / `expenses.void` / `expenses.manage_categories` / `expenses.manage_recurring` / `expenses.dashboard` | – | ✓ | approval workflow (self-approval blocked in SQL for everyone) |
+| `support.view` / `support.reply` / `support.internal_notes` | ✓ | ✓ | staff inbox, replies, internal notes |
+| `support.assign` / `support.manage` | – | ✓ | assignment, saved replies, closing |
+| `capacity.view` / `capacity.manage` / `capacity.override` | – | ✓ | capacity page, settings, activation override |
+| `operations.dashboard.view` | – | ✓ | `/admin/operations` |
 
 Staff grants live in `role_permissions` (seeded in `0001_foundation.sql`) and
 can be changed at runtime by admins without code changes.
@@ -49,3 +61,9 @@ can be changed at runtime by admins without code changes.
 - Modify prices, plan rules or another customer's data
 - Read internal notes, audit logs or other customers' records
 - Edit their own role, account status or retention prompt content
+- See inventory, stock levels, costs, suppliers, expenses, equipment or
+  capacity data in any form
+- Read another customer's support conversation, see internal notes, or mark
+  their own messages as internal (trigger-forced off)
+- Post into a closed conversation or impersonate staff in chat
+  (sender identity is trigger-enforced)

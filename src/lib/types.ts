@@ -214,6 +214,7 @@ export interface Product {
   subscriber_price_kobo: number | null;
   images: string[];
   stock_status: "in_stock" | "low_stock" | "out_of_stock";
+  inventory_item_id: string | null;
   is_active: boolean;
   is_featured: boolean;
   age_suitability: "all" | "adults" | "children";

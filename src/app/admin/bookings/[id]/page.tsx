@@ -7,6 +7,7 @@ import { formatDateTime, formatDuration, formatNaira } from "@/lib/format";
 import { AppointmentStatusBadge, Card, statusLabel } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
 import { BookingActions } from "@/components/admin/booking-actions";
+import { ConsumptionPanel } from "@/components/admin/consumption-panel";
 
 export const metadata: Metadata = { title: "Booking" };
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function AdminBookingDetailPage({
         "*, service:services(name, required_skill), child:children(full_name), " +
           "customer:customer_profiles(id, whatsapp_number, address, city, profile:profiles(full_name, phone)), " +
           "stylist:profiles!appointments_stylist_profile_id_fkey(id, full_name), " +
-          "extras:appointment_extra_services(price_kobo, duration_minutes, payment_requirement, extra_service:extra_services(name)), " +
+          "extras:appointment_extra_services(extra_service_id, price_kobo, duration_minutes, payment_requirement, extra_service:extra_services(name)), " +
           "history:appointment_status_history(previous_status, new_status, reason, created_at), " +
           "reschedules:appointment_reschedule_history(old_starts_at, new_starts_at, reason, created_at), " +
           "notes:appointment_internal_notes(note, created_at, author:profiles(full_name))",
@@ -54,6 +55,57 @@ export default async function AdminBookingDetailPage({
       !requiredSkill ||
       (s.skills as Array<{ skill: string }>).some((k) => k.skill === requiredSkill),
   );
+
+  /* --- inventory consumption (only relevant once completed) --------------- */
+  let usage: Row | null = null;
+  let prefill: Array<{ item_id: string; name: string; unit: string; planned: number }> = [];
+  let availableItems: Array<{ id: string; name: string; unit: string; quantity_available: number }> = [];
+  if (appt.status === "completed") {
+    const extraIds = (appt.extras as Array<{ extra_service_id: string }>)
+      .map((e) => e.extra_service_id);
+    const [{ data: usageRows }, { data: svcTpl }, { data: extraTpl }, { data: invItems }] =
+      await Promise.all([
+        supabase
+          .from("appointment_inventory_usage")
+          .select("*, items:appointment_inventory_usage_items(planned_quantity, actual_quantity, unit, variance_reason, item:inventory_items(name))")
+          .eq("appointment_id", appt.id)
+          .limit(1),
+        supabase
+          .from("service_consumption_templates")
+          .select("item_id, standard_quantity, unit, item:inventory_items(name)")
+          .eq("service_id", appt.service_id)
+          .eq("is_active", true),
+        extraIds.length > 0
+          ? supabase
+              .from("service_consumption_templates")
+              .select("item_id, standard_quantity, unit, item:inventory_items(name)")
+              .in("extra_service_id", extraIds)
+              .eq("is_active", true)
+          : Promise.resolve({ data: [] }),
+        supabase
+          .from("inventory_items")
+          .select("id, name, unit, quantity_available")
+          .eq("is_active", true)
+          .eq("salon_use_available", true)
+          .order("name"),
+      ]);
+    usage = ((usageRows ?? []) as Row[])[0] ?? null;
+    const merged = new Map<string, { item_id: string; name: string; unit: string; planned: number }>();
+    for (const t of [...(svcTpl ?? []), ...(extraTpl ?? [])] as Row[]) {
+      const prev = merged.get(t.item_id);
+      merged.set(t.item_id, {
+        item_id: t.item_id,
+        name: (t.item as { name: string })?.name ?? "Item",
+        unit: t.unit,
+        planned: (prev?.planned ?? 0) + Number(t.standard_quantity),
+      });
+    }
+    prefill = [...merged.values()];
+    availableItems = (invItems ?? []).map((i) => ({
+      id: i.id, name: i.name, unit: i.unit,
+      quantity_available: Number(i.quantity_available),
+    }));
+  }
 
   return (
     <div className="grid gap-4">
@@ -131,6 +183,56 @@ export default async function AdminBookingDetailPage({
         stylists={eligibleStylists.map((s) => ({ id: s.id, name: s.full_name }))}
         requiredSkill={requiredSkill}
       />
+
+      {appt.status === "completed" && (
+        <Card>
+          <p className="font-semibold">Products used (inventory)</p>
+          {usage ? (
+            <div className="mt-2">
+              <p className="text-sm text-emerald-700">
+                Recorded {formatDateTime(usage.posted_at)} — stock already deducted.
+              </p>
+              <table className="mt-2 w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-ink-soft">
+                    <th className="py-1.5">Item</th>
+                    <th className="py-1.5 text-right">Planned</th>
+                    <th className="py-1.5 text-right">Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(usage.items as Row[]).map((it, i) => (
+                    <tr key={i} className="border-t border-line">
+                      <td className="py-1.5">
+                        {(it.item as { name: string })?.name}
+                        {it.variance_reason && (
+                          <span className="block text-xs text-amber-700">
+                            {it.variance_reason}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-1.5 text-right text-ink-soft">
+                        {Number(it.planned_quantity)} {it.unit}
+                      </td>
+                      <td className="py-1.5 text-right font-semibold">
+                        {Number(it.actual_quantity)} {it.unit}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="mt-2">
+              <ConsumptionPanel
+                appointmentId={appt.id}
+                prefill={prefill}
+                available={availableItems}
+              />
+            </div>
+          )}
+        </Card>
+      )}
 
       {(appt.notes as Array<{ note: string; created_at: string; author: { full_name: string } }>).length > 0 && (
         <Card>

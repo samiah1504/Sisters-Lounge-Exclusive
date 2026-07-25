@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 import {
-  BarChart3, Bell, CalendarClock, CalendarDays, CalendarX2, ChevronDown,
-  ChevronsLeft, ChevronsRight, Crown, HeartHandshake, Hourglass, Baby,
-  LayoutDashboard, Layers, LifeBuoy, ListChecks, LogOut, Megaphone, Menu,
-  MessageSquareHeart, PackageOpen, Plug, Scissors, ScrollText, Settings2,
-  ShieldCheck, ShoppingBag, Sparkles, TrendingUp, UserCog, UserRound,
-  Wand2, X, Clock,
+  BarChart3, Bell, Boxes, CalendarClock, CalendarDays, CalendarX2,
+  ChevronDown, ChevronsLeft, ChevronsRight, ClipboardList, Crown, Gauge,
+  HeartHandshake, Hourglass, Baby, LayoutDashboard, Layers, LifeBuoy,
+  ListChecks, LogOut, Megaphone, Menu, MessageSquareHeart, MessagesSquare,
+  PackageOpen, Plug, Receipt, Scissors, ScrollText, Settings2, ShieldCheck,
+  ShoppingBag, Sparkles, Tags, TrendingUp, Truck, UserCog, UserRound,
+  Users, Wand2, Wrench, X, Clock,
 } from "lucide-react";
 
 interface NavItem {
@@ -74,6 +75,25 @@ const NAV: NavGroup[] = [
     ],
   },
   {
+    label: "Operations",
+    items: [
+      { label: "Operations Dashboard", icon: Gauge, href: "/admin/operations" },
+      { label: "Capacity", icon: Users, href: "/admin/capacity" },
+      { label: "Inventory", icon: Boxes, href: "/admin/inventory" },
+      { label: "Stock Counts", icon: ClipboardList, href: "/admin/inventory/counts", canonical: false },
+      { label: "Suppliers", icon: Truck, href: "/admin/suppliers" },
+      { label: "Equipment", icon: Wrench, href: "/admin/equipment" },
+      { label: "Expenses", icon: Receipt, href: "/admin/expenses" },
+    ],
+  },
+  {
+    label: "Customer Support",
+    items: [
+      { label: "Conversations", icon: LifeBuoy, href: "/admin/support" },
+      { label: "Saved Replies", icon: MessagesSquare, href: "/admin/support/replies", canonical: false },
+    ],
+  },
+  {
     label: "Staff",
     items: [
       { label: "Staff & Stylists", icon: UserCog, href: "/admin/staff" },
@@ -85,7 +105,6 @@ const NAV: NavGroup[] = [
     items: [
       { label: "Notifications", icon: Bell },
       { label: "Campaigns", icon: Megaphone },
-      { label: "Support", icon: LifeBuoy },
     ],
   },
   {
@@ -99,6 +118,8 @@ const NAV: NavGroup[] = [
     label: "Settings",
     items: [
       { label: "Business Settings", icon: Settings2, href: "/admin/settings", canonical: false },
+      { label: "Inventory Settings", icon: Boxes, href: "/admin/inventory/settings", canonical: false },
+      { label: "Expense Categories", icon: Tags, href: "/admin/expenses/categories", canonical: false },
       { label: "Integrations", icon: Plug },
       { label: "Roles & Permissions", icon: ShieldCheck },
     ],
