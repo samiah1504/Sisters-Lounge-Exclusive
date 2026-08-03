@@ -8,13 +8,13 @@ import { buttonClass, inputClass } from "@/components/ui";
 export function RescheduleForm({
   appointmentId,
   durationMinutes,
-  location,
+  salonId,
   minNoticeHours,
   maxAdvanceDays,
 }: {
   appointmentId: string;
   durationMinutes: number;
-  location: "salon" | "home";
+  salonId: string;
   minNoticeHours: number;
   maxAdvanceDays: number;
 }) {
@@ -39,7 +39,7 @@ export function RescheduleForm({
       if (!cancelled) setLoading(true);
       try {
         const r = await fetch(
-          `/api/slots?date=${date}&location=${location}&duration=${durationMinutes}`,
+          `/api/slots?date=${date}&salon=${salonId}&duration=${durationMinutes}`,
         );
         const j = await r.json();
         if (!cancelled) setSlots(j.slots ?? []);
@@ -53,7 +53,7 @@ export function RescheduleForm({
     return () => {
       cancelled = true;
     };
-  }, [date, location, durationMinutes]);
+  }, [date, salonId, durationMinutes]);
 
   return (
     <div className="grid gap-4">

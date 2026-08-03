@@ -11,6 +11,7 @@ import {
 } from "@/lib/operations";
 import { Badge, Card, Meter } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
+import { getStockTotals } from "@/server/stock";
 
 export const metadata: Metadata = { title: "Operations Dashboard" };
 export const dynamic = "force-dynamic";
@@ -61,7 +62,8 @@ export default async function OperationsDashboardPage() {
   const monthStart = `${today.slice(0, 7)}-01`;
 
   const [
-    { data: subs }, { data: ents }, { data: sched }, { data: hours },
+    { data: subs }, { data: ents }, { data: salons }, { data: salonSettings },
+    { data: hours },
     { data: capSettings }, { data: invSettings }, { data: items },
     { data: expenses }, { data: intents }, { data: convs },
     { count: pendingSelections },
@@ -71,12 +73,13 @@ export default async function OperationsDashboardPage() {
     supabase.from("visit_entitlements")
       .select("status, cycle:subscription_cycles!inner(status)")
       .eq("subscription_cycles.status", "active"),
-    supabase.from("scheduling_settings").select("*").limit(1),
-    supabase.from("business_hours").select("*"),
+    supabase.from("salons").select("id, chair_capacity").eq("status", "open"),
+    supabase.from("salon_settings").select("*"),
+    supabase.from("salon_hours").select("*"),
     supabase.from("subscription_capacity_settings").select("*").limit(1),
     supabase.from("inventory_settings").select("*").limit(1),
     supabase.from("inventory_items")
-      .select("quantity_available, reorder_level, expiry_date, is_active")
+      .select("id, reorder_level, expiry_date, is_active")
       .eq("is_active", true),
     supabase.from("expenses")
       .select("status, amount_kobo, expense_date")
@@ -97,11 +100,16 @@ export default async function OperationsDashboardPage() {
   const visitsRemaining = entRows.filter((e) => e.status === "available").length;
   const visitsReserved = entRows.filter((e) => e.status === "reserved").length;
 
-  /* capacity */
-  const s = sched?.[0] as Row;
+  /* capacity — summed across open salons */
   const cap = capSettings?.[0] as Row;
-  const weeklySlots = weeklySlotCapacity(
-    (hours ?? []) as never, s?.slot_duration_minutes ?? 30, s?.max_bookings_per_slot ?? 3);
+  const weeklySlots = ((salons ?? []) as Row[]).reduce((sum, salon) => {
+    const ss = ((salonSettings ?? []) as Row[]).find((x) => x.salon_id === salon.id);
+    const salonHours = ((hours ?? []) as Row[]).filter((h) => h.salon_id === salon.id);
+    return sum + weeklySlotCapacity(
+      salonHours as never,
+      ss?.slot_duration_minutes ?? 30,
+      Math.min(ss?.max_bookings_per_slot ?? 3, salon.chair_capacity ?? 3));
+  }, 0);
   const monthlySlots = Math.round(weeklySlots * 4.33);
   const util = utilizationPercent(entRows.length, monthlySlots);
   const warnThreshold = cap?.warning_threshold_percent ?? 80;
@@ -111,7 +119,11 @@ export default async function OperationsDashboardPage() {
   const pipelineKobo = pendingIntents.reduce((sum, i) => sum + (i.amount_kobo ?? 0), 0);
 
   /* inventory */
-  const inv = (items ?? []) as Row[];
+  const stockTotals = await getStockTotals(supabase);
+  const inv = ((items ?? []) as Row[]).map((i): Row => ({
+    ...i,
+    quantity_available: stockTotals.get(i.id)?.available ?? 0,
+  }));
   const invWarnDays = (invSettings?.[0] as Row)?.expiry_warning_days ?? 30;
   const outOfStock = inv.filter((i) => stockLevel(i as never) === "out_of_stock").length;
   const lowStock = inv.filter((i) => stockLevel(i as never) === "low_stock").length;

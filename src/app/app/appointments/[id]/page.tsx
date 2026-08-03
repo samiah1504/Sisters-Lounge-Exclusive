@@ -71,9 +71,9 @@ export default async function AppointmentDetailPage({
       <Card>
         <dl className="grid gap-2.5 text-sm">
           <div className="flex justify-between">
-            <dt className="text-ink-soft">Location</dt>
-            <dd className="font-semibold">
-              {appt.location_type === "home" ? "Home service" : "Sisters Lounge salon"}
+            <dt className="text-ink-soft">Salon</dt>
+            <dd className="text-right font-semibold">
+              {appt.salon ? `${appt.salon.name}, ${appt.salon.city}` : "Sisters Lounge Salon"}
             </dd>
           </div>
           <div className="flex justify-between">

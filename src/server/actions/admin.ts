@@ -21,7 +21,6 @@ const categorySchema = z.object({
   short_description: z.string().trim().max(300).default(""),
   full_description: z.string().trim().max(3000).default(""),
   eligibility_notes: z.string().trim().max(1000).default(""),
-  service_location_type: z.enum(["salon", "home", "both"]),
   display_order: z.coerce.number().int().min(0).max(999),
   is_active: z.boolean(),
   is_public: z.boolean(),
@@ -38,7 +37,6 @@ export async function saveCategory(
     short_description: formData.get("short_description") ?? "",
     full_description: formData.get("full_description") ?? "",
     eligibility_notes: formData.get("eligibility_notes") ?? "",
-    service_location_type: formData.get("service_location_type"),
     display_order: formData.get("display_order") ?? 0,
     is_active: formData.get("is_active") === "on",
     is_public: formData.get("is_public") === "on",
@@ -88,7 +86,6 @@ const planSchema = z.object({
   monthly_price_naira: z.coerce.number().min(0).max(10_000_000),
   visits_included: z.coerce.number().int().min(1).max(31),
   min_visit_interval_days: z.coerce.number().int().min(0).max(30),
-  location_type: z.enum(["salon", "home", "both"]),
   eligible_age_group: z.enum(["all", "adults", "children"]),
   eligibility_notes: z.string().trim().max(1000).default(""),
   available_days: z.array(z.coerce.number().int().min(0).max(6)).min(1, "Pick at least one day"),
@@ -118,7 +115,6 @@ export async function savePlan(
     monthly_price_naira: formData.get("monthly_price_naira"),
     visits_included: formData.get("visits_included"),
     min_visit_interval_days: formData.get("min_visit_interval_days") ?? 7,
-    location_type: formData.get("location_type"),
     eligible_age_group: formData.get("eligible_age_group"),
     eligibility_notes: formData.get("eligibility_notes") ?? "",
     available_days: formData.getAll("available_days"),
@@ -255,8 +251,6 @@ const serviceSchema = z.object({
   category: z.string().trim().max(60).default("general"),
   estimated_duration_minutes: z.coerce.number().int().min(5).max(600),
   eligible_age_group: z.enum(["all", "adults", "children"]),
-  salon_available: z.boolean(),
-  home_available: z.boolean(),
   required_skill: z.string().trim().max(60).nullable(),
   display_order: z.coerce.number().int().min(0).max(999),
   is_active: z.boolean(),
@@ -275,8 +269,6 @@ export async function saveService(
     category: formData.get("category") || "general",
     estimated_duration_minutes: formData.get("estimated_duration_minutes"),
     eligible_age_group: formData.get("eligible_age_group"),
-    salon_available: formData.get("salon_available") === "on",
-    home_available: formData.get("home_available") === "on",
     required_skill: skill === "" ? null : skill,
     display_order: formData.get("display_order") ?? 0,
     is_active: formData.get("is_active") === "on",
@@ -320,8 +312,6 @@ const extraSchema = z.object({
   estimated_duration_minutes: z.coerce.number().int().min(5).max(480),
   min_advance_notice_hours: z.coerce.number().int().min(0).max(336),
   payment_requirement: z.enum(["pay_before_confirmation", "pay_at_salon", "admin_decides"]),
-  salon_available: z.boolean(),
-  home_available: z.boolean(),
   is_active: z.boolean(),
   is_public: z.boolean(),
   is_featured: z.boolean(),
@@ -344,8 +334,6 @@ export async function saveExtraService(
     estimated_duration_minutes: formData.get("estimated_duration_minutes"),
     min_advance_notice_hours: formData.get("min_advance_notice_hours") ?? 0,
     payment_requirement: formData.get("payment_requirement"),
-    salon_available: formData.get("salon_available") === "on",
-    home_available: formData.get("home_available") === "on",
     is_active: formData.get("is_active") === "on",
     is_public: formData.get("is_public") === "on",
     is_featured: formData.get("is_featured") === "on",
@@ -713,7 +701,36 @@ export async function adminArchiveCustomer(
 
 /* ------------------------------------------------------------- settings --- */
 
+/** Brand-level defaults (v3 §4.7); per-salon values live on salon_settings. */
 export async function saveSchedulingSettings(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdmin();
+  const schema = z.object({
+    min_booking_notice_hours: z.coerce.number().int().min(0).max(168),
+    max_advance_booking_days: z.coerce.number().int().min(1).max(180),
+    reschedule_deadline_hours: z.coerce.number().int().min(0).max(168),
+  });
+  const parsed = schema.safeParse({
+    min_booking_notice_hours: formData.get("min_booking_notice_hours"),
+    max_advance_booking_days: formData.get("max_advance_booking_days"),
+    reschedule_deadline_hours: formData.get("reschedule_deadline_hours"),
+  });
+  if (!parsed.success) return { error: "Check the settings values." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("scheduling_settings")
+    .update(parsed.data)
+    .eq("id", true);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/settings");
+  return { success: "Settings saved." };
+}
+
+export async function saveSalonSettings(
+  salonId: string,
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -721,41 +738,26 @@ export async function saveSchedulingSettings(
   const schema = z.object({
     slot_duration_minutes: z.coerce.number().refine((v) => [15, 20, 30, 45, 60].includes(v)),
     max_bookings_per_slot: z.coerce.number().int().min(1).max(20),
-    min_booking_notice_hours: z.coerce.number().int().min(0).max(168),
-    max_advance_booking_days: z.coerce.number().int().min(1).max(180),
-    reschedule_deadline_hours: z.coerce.number().int().min(0).max(168),
-    home_service_capacity_per_day: z.coerce.number().int().min(0).max(50),
-    supported_service_areas: z.string().trim(),
+    no_show_grace_minutes: z.coerce.number().int().min(0).max(120),
   });
   const parsed = schema.safeParse({
     slot_duration_minutes: formData.get("slot_duration_minutes"),
     max_bookings_per_slot: formData.get("max_bookings_per_slot"),
-    min_booking_notice_hours: formData.get("min_booking_notice_hours"),
-    max_advance_booking_days: formData.get("max_advance_booking_days"),
-    reschedule_deadline_hours: formData.get("reschedule_deadline_hours"),
-    home_service_capacity_per_day: formData.get("home_service_capacity_per_day"),
-    supported_service_areas: formData.get("supported_service_areas") ?? "ilorin",
+    no_show_grace_minutes: formData.get("no_show_grace_minutes") ?? 20,
   });
   if (!parsed.success) return { error: "Check the settings values." };
-  const { supported_service_areas, ...rest } = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from("scheduling_settings")
-    .update({
-      ...rest,
-      supported_service_areas: supported_service_areas
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean),
-    })
-    .eq("id", true);
+    .from("salon_settings")
+    .upsert({ salon_id: salonId, ...parsed.data });
   if (error) return { error: error.message };
   revalidatePath("/admin/settings");
-  return { success: "Settings saved." };
+  return { success: "Salon settings saved." };
 }
 
 export async function saveBusinessHours(
+  salonId: string,
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -769,16 +771,17 @@ export async function saveBusinessHours(
       return { error: "Closing time must be after opening time." };
     }
     const { error } = await supabase
-      .from("business_hours")
-      .update({ is_open: isOpen, open_time: open, close_time: close })
-      .eq("day_of_week", d);
+      .from("salon_hours")
+      .upsert({ salon_id: salonId, day_of_week: d,
+                is_open: isOpen, open_time: open, close_time: close });
     if (error) return { error: error.message };
   }
   revalidatePath("/admin/settings");
-  return { success: "Business hours saved." };
+  return { success: "Salon hours saved." };
 }
 
 export async function addBlackoutDate(
+  salonId: string,
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -788,8 +791,8 @@ export async function addBlackoutDate(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Choose a date." };
   const supabase = await createClient();
   const { error } = await supabase
-    .from("blackout_dates")
-    .insert({ date, reason, is_full_day: true });
+    .from("salon_blackout_dates")
+    .insert({ salon_id: salonId, date, reason, is_full_day: true });
   if (error) return { error: error.message };
   revalidatePath("/admin/settings");
   return { success: "Blackout date added." };
@@ -798,7 +801,7 @@ export async function addBlackoutDate(
 export async function removeBlackoutDate(id: string): Promise<void> {
   await requireAdmin();
   const supabase = await createClient();
-  await supabase.from("blackout_dates").delete().eq("id", id);
+  await supabase.from("salon_blackout_dates").delete().eq("id", id);
   revalidatePath("/admin/settings");
 }
 

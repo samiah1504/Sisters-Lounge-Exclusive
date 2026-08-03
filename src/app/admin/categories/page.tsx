@@ -16,14 +16,6 @@ function CategoryFields({ c }: { c?: Record<string, unknown> }) {
           <input id={`name-${c?.id ?? "new"}`} name="name" required
             defaultValue={(c?.name as string) ?? ""} className={inputClass} />
         </Field>
-        <Field label="Service location" htmlFor={`loc-${c?.id ?? "new"}`}>
-          <select id={`loc-${c?.id ?? "new"}`} name="service_location_type"
-            defaultValue={(c?.service_location_type as string) ?? "salon"} className={inputClass}>
-            <option value="salon">Salon</option>
-            <option value="home">Home</option>
-            <option value="both">Both</option>
-          </select>
-        </Field>
       </div>
       <Field label="Short description" htmlFor={`sd-${c?.id ?? "new"}`}>
         <input id={`sd-${c?.id ?? "new"}`} name="short_description"

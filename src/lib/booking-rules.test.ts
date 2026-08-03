@@ -111,11 +111,10 @@ describe("profileCompletion", () => {
     const r = profileCompletion({ full_name: "Maryam" });
     expect(r.complete).toBe(false);
     expect(r.missing).toContain("WhatsApp number");
-    expect(r.missing).toContain("Service area confirmation");
-    expect(r.missing).toHaveLength(6);
+    expect(r.missing).toHaveLength(2);
   });
   it("whitespace-only values count as missing", () => {
-    expect(profileCompletion({ ...complete, address: "  " }).complete).toBe(false);
+    expect(profileCompletion({ ...complete, whatsapp_number: "  " }).complete).toBe(false);
   });
 });
 

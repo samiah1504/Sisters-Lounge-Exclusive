@@ -8,11 +8,9 @@ import type { CustomerProfile, Profile } from "@/lib/types";
 export function ProfileForm({
   profile,
   customerProfile,
-  serviceAreas,
 }: {
   profile: Profile;
   customerProfile: CustomerProfile;
-  serviceAreas: string[];
 }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(
     updateProfile,
@@ -61,28 +59,6 @@ export function ProfileForm({
           <option value="email">Email</option>
         </select>
       </Field>
-      <Field label="Service area" htmlFor="service_area"
-        hint="Home service is currently available only within Ilorin.">
-        <select id="service_area" name="service_area"
-          defaultValue={customerProfile.service_area} className={inputClass}>
-          {serviceAreas.map((a) => (
-            <option key={a} value={a}>
-              {a[0].toUpperCase() + a.slice(1)}
-            </option>
-          ))}
-          <option value="other">Other (salon visits only)</option>
-        </select>
-      </Field>
-
-      <label className="flex items-start gap-3 rounded-xl border border-line bg-white p-3.5">
-        <input type="checkbox" name="service_area_confirmed" className="mt-1 h-5 w-5 accent-brand-600"
-          defaultChecked={customerProfile.service_area_confirmed} />
-        <span className="text-sm">
-          <span className="font-semibold">I confirm my service area is correct.</span>
-          <span className="block text-ink-soft">Required before you can book appointments.</span>
-        </span>
-      </label>
-
       <fieldset className="grid gap-2 rounded-xl border border-line bg-white p-3.5">
         <legend className="px-1 text-sm font-semibold text-ink-soft">Notifications</legend>
         <label className="flex items-center gap-3 text-sm">

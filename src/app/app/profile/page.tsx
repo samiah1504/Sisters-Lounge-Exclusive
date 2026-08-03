@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { requireCustomer } from "@/server/auth";
-import { getSchedulingInfo } from "@/server/customer";
 import { profileCompletion } from "@/lib/booking-rules";
 import { ProfileForm } from "@/components/profile-form";
 import { Card } from "@/components/ui";
@@ -10,15 +9,10 @@ export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const session = await requireCustomer();
-  const scheduling = await getSchedulingInfo();
   const completion = profileCompletion({
     full_name: session.profile.full_name,
     phone: session.profile.phone,
     whatsapp_number: session.customerProfile.whatsapp_number,
-    address: session.customerProfile.address,
-    city: session.customerProfile.city,
-    state: session.customerProfile.state,
-    service_area_confirmed: session.customerProfile.service_area_confirmed,
   });
 
   return (
@@ -40,7 +34,6 @@ export default async function ProfilePage() {
       <ProfileForm
         profile={session.profile}
         customerProfile={session.customerProfile}
-        serviceAreas={scheduling?.supportedServiceAreas ?? ["ilorin"]}
       />
     </div>
   );

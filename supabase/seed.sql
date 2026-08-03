@@ -30,14 +30,13 @@ insert into public.stylist_skills (staff_profile_id, skill) values
   ('11111111-0000-0000-0000-000000000002', 'natural-hair'),
   ('11111111-0000-0000-0000-000000000002', 'kids-hair'),
   ('11111111-0000-0000-0000-000000000002', 'colouring');
-insert into public.staff_working_hours (staff_profile_id, day_of_week, start_time, end_time)
-select '11111111-0000-0000-0000-000000000002', d, '09:00', '18:00' from generate_series(1, 6) d;
+insert into public.staff_working_hours (staff_profile_id, salon_id, day_of_week, start_time, end_time)
+select '11111111-0000-0000-0000-000000000002', '77770001-0000-0000-0000-000000000001', d, '09:00', '18:00' from generate_series(1, 6) d;
 
 -- Complete customer profiles so booking readiness passes.
 update public.customer_profiles cp set
   whatsapp_number = p.phone,
   address = '12 Unity Road', city = 'Ilorin', state = 'Kwara',
-  service_area = 'ilorin', service_area_confirmed = true,
   marketing_consent = true
 from public.profiles p
 where cp.profile_id = p.id and p.role = 'customer';
@@ -55,68 +54,60 @@ from (values
 
 -- -------------------------------------------------------------- categories --
 insert into public.subscription_categories
-  (id, name, slug, short_description, service_location_type, display_order, eligibility_notes) values
+  (id, name, slug, short_description, display_order, eligibility_notes) values
   ('33333333-0000-0000-0000-000000000001', 'Adult', 'adult',
-   'Monthly plans for adults who want consistent salon care.', 'salon', 1, ''),
+   'Monthly plans for adults who want consistent salon care.', 1, ''),
   ('33333333-0000-0000-0000-000000000002', 'Kids', 'kids',
-   'Gentle plans for children, managed from a parent account.', 'salon', 2,
+   'Gentle plans for children, managed from a parent account.', 2,
    'For children aged 12 and under.'),
   ('33333333-0000-0000-0000-000000000003', 'Undergraduate', 'undergraduate',
-   'Student-friendly pricing for consistent care on a budget.', 'salon', 3,
-   'A valid student ID is required at your first visit.'),
-  ('33333333-0000-0000-0000-000000000004', 'Home Service', 'home-service',
-   'A Sisters Lounge stylist comes to you — within Ilorin.', 'home', 4,
-   'Available only within Ilorin for now.');
+   'Student-friendly pricing for consistent care on a budget.', 3,
+   'A valid student ID is required at your first visit.');
 
 -- ---------------------------------------------------------------- services --
 insert into public.services (id, name, slug, description, category, estimated_duration_minutes,
-                             eligible_age_group, salon_available, home_available, display_order) values
+                             eligible_age_group, display_order) values
   ('44444444-0000-0000-0000-000000000001', 'Wash & Deep Condition', 'wash-deep-condition',
-   'Cleanse, deep condition and blow-out.', 'care', 60, 'all', true, true, 1),
+   'Cleanse, deep condition and blow-out.', 'care', 60, 'all', 1),
   ('44444444-0000-0000-0000-000000000002', 'Protective Styling', 'protective-styling',
-   'Braids, twists or cornrows to protect and retain length.', 'styling', 120, 'all', true, true, 2),
+   'Braids, twists or cornrows to protect and retain length.', 'styling', 120, 'all', 2),
   ('44444444-0000-0000-0000-000000000003', 'Deep Treatment & Steam', 'deep-treatment-steam',
-   'Intensive treatment with steam for maximum absorption.', 'treatment', 75, 'all', true, false, 3),
+   'Intensive treatment with steam for maximum absorption.', 'treatment', 75, 'all', 3),
   ('44444444-0000-0000-0000-000000000004', 'Kids Wash & Style', 'kids-wash-style',
-   'Gentle wash, detangle and simple style for children.', 'kids', 60, 'children', true, true, 4),
+   'Gentle wash, detangle and simple style for children.', 'kids', 60, 'children', 4),
   ('44444444-0000-0000-0000-000000000005', 'Natural Styling', 'natural-styling',
-   'Twist-outs, updos and everyday natural styles.', 'styling', 90, 'adults', true, true, 5);
+   'Twist-outs, updos and everyday natural styles.', 'styling', 90, 'adults', 5);
 
 -- -------------------------------------------------------------------- plans --
 insert into public.subscription_plans
   (id, organisation_id, category_id, name, slug, plan_code, tier_label, short_description,
-   monthly_price_kobo, visits_included, min_visit_interval_days, location_type,
+   monthly_price_kobo, visits_included, min_visit_interval_days,
    eligible_age_group, is_featured, display_order, status, terms) values
   ('55555555-0000-0000-0000-000000000001', (select id from public.organisations limit 1),
    '33333333-0000-0000-0000-000000000001', 'Basic', 'basic', 'SL-AD-BASIC', 'Basic',
    'Essential monthly care — wash, condition and simple styling.',
-   1500000, 2, 7, 'salon', 'adults', false, 1, 'active',
+   1500000, 2, 7, 'adults', false, 1, 'active',
    'Visits expire at cycle end and cannot roll over. Visits must be at least 7 days apart.'),
   ('55555555-0000-0000-0000-000000000002', (select id from public.organisations limit 1),
    '33333333-0000-0000-0000-000000000001', 'Deluxe', 'deluxe', 'SL-AD-DELUXE', 'Deluxe',
    'A fuller routine with monthly treatments for steady growth.',
-   2500000, 3, 7, 'salon', 'adults', true, 2, 'active',
+   2500000, 3, 7, 'adults', true, 2, 'active',
    'Visits expire at cycle end and cannot roll over. Visits must be at least 7 days apart.'),
   ('55555555-0000-0000-0000-000000000003', (select id from public.organisations limit 1),
    '33333333-0000-0000-0000-000000000001', 'Premium', 'premium', 'SL-AD-PREMIUM', 'Premium',
    'The complete Sisters Lounge experience, every week.',
-   4000000, 4, 7, 'salon', 'adults', false, 3, 'active',
+   4000000, 4, 7, 'adults', false, 3, 'active',
    'Visits expire at cycle end and cannot roll over. Visits must be at least 7 days apart.'),
   ('55555555-0000-0000-0000-000000000004', (select id from public.organisations limit 1),
    '33333333-0000-0000-0000-000000000003', 'Undergraduate', 'undergraduate-plan', 'SL-UG-BASIC', 'Basic',
    'Student-friendly pricing for consistent monthly care.',
-   1000000, 2, 7, 'salon', 'adults', false, 4, 'active',
+   1000000, 2, 7, 'adults', false, 4, 'active',
    'Valid student ID required. Visits expire at cycle end.'),
   ('55555555-0000-0000-0000-000000000005', (select id from public.organisations limit 1),
    '33333333-0000-0000-0000-000000000002', 'Kids', 'kids-plan', 'SL-KD-BASIC', 'Basic',
    'Gentle monthly care for children, managed by a parent.',
-   1200000, 2, 7, 'salon', 'children', false, 5, 'active',
-   'For children 12 and under. Visits expire at cycle end.'),
-  ('55555555-0000-0000-0000-000000000006', (select id from public.organisations limit 1),
-   '33333333-0000-0000-0000-000000000004', 'Home Service', 'home-service-plan', 'SL-HM-BASIC', 'Deluxe',
-   'Full service at your home — tools and products brought along.',
-   3000000, 2, 7, 'home', 'all', false, 6, 'active',
-   'Available within Ilorin only. Visits expire at cycle end.');
+   1200000, 2, 7, 'children', false, 5, 'active',
+   'For children 12 and under. Visits expire at cycle end.');
 
 -- Included services per plan.
 insert into public.subscription_plan_services (plan_id, service_id, relation) values
@@ -130,9 +121,7 @@ insert into public.subscription_plan_services (plan_id, service_id, relation) va
   ('55555555-0000-0000-0000-000000000003', '44444444-0000-0000-0000-000000000003', 'included'),
   ('55555555-0000-0000-0000-000000000003', '44444444-0000-0000-0000-000000000005', 'included'),
   ('55555555-0000-0000-0000-000000000004', '44444444-0000-0000-0000-000000000001', 'included'),
-  ('55555555-0000-0000-0000-000000000005', '44444444-0000-0000-0000-000000000004', 'included'),
-  ('55555555-0000-0000-0000-000000000006', '44444444-0000-0000-0000-000000000001', 'included'),
-  ('55555555-0000-0000-0000-000000000006', '44444444-0000-0000-0000-000000000002', 'included');
+  ('55555555-0000-0000-0000-000000000005', '44444444-0000-0000-0000-000000000004', 'included');
 
 -- ------------------------------------------------------------ extra services --
 insert into public.extra_service_categories (id, name, slug, display_order) values
@@ -142,28 +131,28 @@ insert into public.extra_service_categories (id, name, slug, display_order) valu
 
 insert into public.extra_services
   (id, name, slug, short_description, price_kobo, estimated_duration_minutes,
-   category_id, is_featured, salon_available, home_available, payment_requirement, display_order) values
+   category_id, is_featured, payment_requirement, display_order) values
   ('77777777-0000-0000-0000-000000000001', 'Henna', 'henna',
    'Traditional henna art for hands or feet.', 500000, 45,
-   '66666666-0000-0000-0000-000000000001', true, true, true, 'pay_at_salon', 1),
+   '66666666-0000-0000-0000-000000000001', true, 'pay_at_salon', 1),
   ('77777777-0000-0000-0000-000000000002', 'Beading', 'beading',
    'Beautiful beads added to braids or twists.', 300000, 30,
-   '66666666-0000-0000-0000-000000000002', false, true, true, 'pay_at_salon', 2),
+   '66666666-0000-0000-0000-000000000002', false, 'pay_at_salon', 2),
   ('77777777-0000-0000-0000-000000000003', 'Manicure', 'manicure',
    'Neat, polished nails while you get your hair done.', 400000, 40,
-   '66666666-0000-0000-0000-000000000001', false, true, false, 'pay_at_salon', 3),
+   '66666666-0000-0000-0000-000000000001', false, 'pay_at_salon', 3),
   ('77777777-0000-0000-0000-000000000004', 'Pedicure', 'pedicure',
    'Relaxing pedicure with a tidy finish.', 450000, 45,
-   '66666666-0000-0000-0000-000000000001', false, true, false, 'pay_at_salon', 4),
+   '66666666-0000-0000-0000-000000000001', false, 'pay_at_salon', 4),
   ('77777777-0000-0000-0000-000000000005', 'Hair Trimming', 'hair-trimming',
    'Precise trim to keep ends healthy.', 400000, 20,
-   '66666666-0000-0000-0000-000000000002', true, true, true, 'pay_at_salon', 5),
+   '66666666-0000-0000-0000-000000000002', true, 'pay_at_salon', 5),
   ('77777777-0000-0000-0000-000000000006', 'Hair Colouring', 'hair-colouring',
    'Professional colour — requires advance notice.', 1500000, 90,
-   '66666666-0000-0000-0000-000000000002', false, true, false, 'pay_before_confirmation', 6),
+   '66666666-0000-0000-0000-000000000002', false, 'pay_before_confirmation', 6),
   ('77777777-0000-0000-0000-000000000007', 'Steam Treatment', 'steam-treatment',
    'Add a steam session for deeper hydration.', 350000, 30,
-   '66666666-0000-0000-0000-000000000003', true, true, false, 'pay_at_salon', 7);
+   '66666666-0000-0000-0000-000000000003', true, 'pay_at_salon', 7);
 
 update public.extra_services set min_advance_notice_hours = 48
 where slug = 'hair-colouring';
@@ -268,9 +257,9 @@ begin
     join public.profiles p on p.id = cp.profile_id where p.email = 'zainab@customer.test';
 
   -- ---- Maryam: Deluxe active, cycle started 10 days ago -------------------
-  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source)
+  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source, home_salon_id)
   values (v_maryam, '55555555-0000-0000-0000-000000000002',
-          public.latest_plan_version('55555555-0000-0000-0000-000000000002'), 'active', 'manual')
+          public.latest_plan_version('55555555-0000-0000-0000-000000000002'), 'active', 'manual', '77770001-0000-0000-0000-000000000001')
   returning id into v_sub;
   insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included)
   values (v_sub, 1, v_today - 10, v_today - 10 + interval '1 month', 3) returning id into v_cycle;
@@ -279,9 +268,9 @@ begin
   end loop;
 
   -- Completed appointment 8 days ago (visit consumed).
-  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id,
+  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id, salon_id,
     starts_at, ends_at, duration_minutes, status, completed_at)
-  values (v_maryam, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001',
+  values (v_maryam, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001', '77770001-0000-0000-0000-000000000001',
     (v_today - 8 + time '10:00') at time zone 'Africa/Lagos',
     (v_today - 8 + time '11:00') at time zone 'Africa/Lagos', 60, 'completed', now() - interval '8 days')
   returning id into v_appt;
@@ -291,10 +280,10 @@ begin
   values (v_ent, v_appt, 'converted', now() - interval '8 days');
 
   -- Upcoming appointment in 3 days with henna + trimming add-ons (reserved).
-  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id,
+  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id, salon_id,
     starts_at, ends_at, duration_minutes, status, addon_total_kobo,
     stylist_profile_id, customer_notes)
-  values (v_maryam, v_sub, v_cycle, '44444444-0000-0000-0000-000000000003',
+  values (v_maryam, v_sub, v_cycle, '44444444-0000-0000-0000-000000000003', '77770001-0000-0000-0000-000000000001',
     (v_today + 3 + time '10:00') at time zone 'Africa/Lagos',
     (v_today + 3 + time '12:20') at time zone 'Africa/Lagos', 140, 'assigned', 900000,
     '11111111-0000-0000-0000-000000000002', 'Please use the rose oil if available')
@@ -308,25 +297,25 @@ begin
     (v_appt, '77777777-0000-0000-0000-000000000005', 400000, 20, 'pay_at_salon');
 
   -- ---- Khadija: Basic active, one visit left ------------------------------
-  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source)
+  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source, home_salon_id)
   values (v_khadija, '55555555-0000-0000-0000-000000000001',
-          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'active', 'manual')
+          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'active', 'manual', '77770001-0000-0000-0000-000000000001')
   returning id into v_sub;
   insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included)
   values (v_sub, 1, v_today - 20, v_today - 20 + interval '1 month', 2) returning id into v_cycle;
   insert into public.visit_entitlements (cycle_id, seq_number, status, consumed_at)
   values (v_cycle, 1, 'consumed', now() - interval '12 days');
   insert into public.visit_entitlements (cycle_id, seq_number) values (v_cycle, 2);
-  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id,
+  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id, salon_id,
     starts_at, ends_at, duration_minutes, status, completed_at)
-  values (v_khadija, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001',
+  values (v_khadija, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001', '77770001-0000-0000-0000-000000000001',
     (v_today - 12 + time '11:00') at time zone 'Africa/Lagos',
     (v_today - 12 + time '12:00') at time zone 'Africa/Lagos', 60, 'completed', now() - interval '12 days');
 
   -- ---- Fatima: Basic active, nothing booked (retention target) ------------
-  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source)
+  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source, home_salon_id)
   values (v_fatima, '55555555-0000-0000-0000-000000000001',
-          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'active', 'manual')
+          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'active', 'manual', '77770001-0000-0000-0000-000000000001')
   returning id into v_sub;
   insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included)
   values (v_sub, 1, v_today - 9, v_today - 9 + interval '1 month', 2) returning id into v_cycle;
@@ -334,10 +323,10 @@ begin
 
   -- ---- Aisha: Kids subscriptions for both children ------------------------
   for i in 1..2 loop
-    insert into public.subscriptions (customer_id, child_id, plan_id, plan_version_id, status, activation_source)
+    insert into public.subscriptions (customer_id, child_id, plan_id, plan_version_id, status, activation_source, home_salon_id)
     values (v_aisha, case when i = 1 then v_child1 else v_child2 end,
             '55555555-0000-0000-0000-000000000005',
-            public.latest_plan_version('55555555-0000-0000-0000-000000000005'), 'active', 'manual')
+            public.latest_plan_version('55555555-0000-0000-0000-000000000005'), 'active', 'manual', '77770001-0000-0000-0000-000000000001')
     returning id into v_sub;
     insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included)
     values (v_sub, 1, v_today - 5, v_today - 5 + interval '1 month', 2) returning id into v_cycle;
@@ -348,9 +337,10 @@ begin
   select s.id, c.id into v_sub, v_cycle from public.subscriptions s
     join public.subscription_cycles c on c.subscription_id = s.id
     where s.child_id = v_child1;
-  insert into public.appointments (customer_id, child_id, subscription_id, cycle_id, service_id,
+  insert into public.appointments (customer_id, child_id, subscription_id, cycle_id, service_id, salon_id,
     starts_at, ends_at, duration_minutes, status)
   values (v_aisha, v_child1, v_sub, v_cycle, '44444444-0000-0000-0000-000000000004',
+    '77770001-0000-0000-0000-000000000001',
     (v_today + 5 + time '12:00') at time zone 'Africa/Lagos',
     (v_today + 5 + time '13:00') at time zone 'Africa/Lagos', 60, 'confirmed')
   returning id into v_appt;
@@ -359,17 +349,17 @@ begin
   insert into public.visit_reservations (entitlement_id, appointment_id) values (v_ent, v_appt);
 
   -- ---- Zainab: expired subscription, missed appointment, pending selection -
-  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source)
+  insert into public.subscriptions (customer_id, plan_id, plan_version_id, status, activation_source, home_salon_id)
   values (v_zainab, '55555555-0000-0000-0000-000000000001',
-          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'expired', 'manual')
+          public.latest_plan_version('55555555-0000-0000-0000-000000000001'), 'expired', 'manual', '77770001-0000-0000-0000-000000000001')
   returning id into v_sub;
   insert into public.subscription_cycles (subscription_id, cycle_number, starts_on, ends_on, visits_included, status)
   values (v_sub, 1, v_today - 45, v_today - 15, 2, 'expired') returning id into v_cycle;
   insert into public.visit_entitlements (cycle_id, seq_number, status) values
     (v_cycle, 1, 'expired'), (v_cycle, 2, 'expired');
-  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id,
+  insert into public.appointments (customer_id, subscription_id, cycle_id, service_id, salon_id,
     starts_at, ends_at, duration_minutes, status)
-  values (v_zainab, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001',
+  values (v_zainab, v_sub, v_cycle, '44444444-0000-0000-0000-000000000001', '77770001-0000-0000-0000-000000000001',
     (v_today - 20 + time '10:00') at time zone 'Africa/Lagos',
     (v_today - 20 + time '11:00') at time zone 'Africa/Lagos', 60, 'missed');
 
@@ -449,16 +439,16 @@ begin
     ('bbbb1111-0000-0000-0000-000000000012', v_org, 'Hair Dryer', 'INV-EQ-002', 'equipment', v_cat_eq, 'piece', 0, 0, 9000000, null, null, false, null);
 
   -- Opening stock through the ledger (auth.uid() is null in seed = trusted).
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000001', 'opening_stock', 8000, 'opening stock');
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000002', 'opening_stock', 6000, 'opening stock');
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000003', 'opening_stock', 2500, 'opening stock');
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000004', 'opening_stock', 3, 'opening stock');   -- low stock (reorder 5)
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000005', 'opening_stock', 1500, 'opening stock');
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000006', 'opening_stock', 25, 'opening stock');
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000007', 'opening_stock', 120, 'opening stock');
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000001', 'opening_stock', 8000, 'opening stock');
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000002', 'opening_stock', 6000, 'opening stock');
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000003', 'opening_stock', 2500, 'opening stock');
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000004', 'opening_stock', 3, 'opening stock');   -- low stock (reorder 5)
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000005', 'opening_stock', 1500, 'opening stock');
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000006', 'opening_stock', 25, 'opening stock');
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000007', 'opening_stock', 120, 'opening stock');
   -- Nail polish left at 0 = out of stock. Retail items:
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000009', 'opening_stock', 12, 'opening stock');
-  perform public.fn_post_stock_movement('bbbb1111-0000-0000-0000-000000000010', 'opening_stock', 18, 'opening stock');
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000009', 'opening_stock', 12, 'opening stock');
+  perform public.fn_post_stock_movement('77770001-0000-0000-0000-000000000001', 'bbbb1111-0000-0000-0000-000000000010', 'opening_stock', 18, 'opening stock');
 
   -- Link retail products to inventory.
   update public.products set inventory_item_id = 'bbbb1111-0000-0000-0000-000000000009'
@@ -467,8 +457,8 @@ begin
     where slug = 'nourishing-hair-oil';
 
   -- A confirmed stock receipt.
-  insert into public.stock_receipts (id, supplier_id, invoice_number, payment_status, notes)
-  values ('cccc1111-0000-0000-0000-000000000001', v_sup1, 'KBS-2041', 'unpaid', 'Monthly consumables order')
+  insert into public.stock_receipts (id, salon_id, supplier_id, invoice_number, payment_status, notes)
+  values ('cccc1111-0000-0000-0000-000000000001', '77770001-0000-0000-0000-000000000001', v_sup1, 'KBS-2041', 'unpaid', 'Monthly consumables order')
   returning id into v_receipt;
   insert into public.stock_receipt_items (receipt_id, item_id, quantity, unit_cost_kobo) values
     (v_receipt, 'bbbb1111-0000-0000-0000-000000000001', 5000, 2),
@@ -476,8 +466,8 @@ begin
   perform public.fn_confirm_stock_receipt(v_receipt);
 
   -- A submitted stock count with variance (henna shrinkage).
-  insert into public.stock_counts (id, location, status, started_by, notes)
-  values ('cccc2222-0000-0000-0000-000000000001', 'salon', 'submitted', v_stylist, 'Weekly count')
+  insert into public.stock_counts (id, salon_id, location, status, started_by, notes)
+  values ('cccc2222-0000-0000-0000-000000000001', '77770001-0000-0000-0000-000000000001', 'salon', 'submitted', v_stylist, 'Weekly count')
   returning id into v_count;
   insert into public.stock_count_items (count_id, item_id, system_quantity, counted_quantity, reason) values
     (v_count, 'bbbb1111-0000-0000-0000-000000000005', 1500, 1400, 'spillage during refill');
@@ -500,17 +490,17 @@ begin
 
   -- Expenses in each state + recurring template.
   select id into v_cat_id from public.expense_categories where name = 'Rent';
-  insert into public.expenses (organisation_id, expense_date, amount_kobo, category_id, description, payee, status, entered_by, approved_by, approved_at, paid_at) values
-    (v_org, date_trunc('month', now())::date, 25000000, v_cat_id, 'Monthly salon rent', 'Landlord', 'paid', v_admin, v_admin, now(), now());
+  insert into public.expenses (organisation_id, salon_id, expense_date, amount_kobo, category_id, description, payee, status, entered_by, approved_by, approved_at, paid_at) values
+    (v_org, '77770001-0000-0000-0000-000000000001', date_trunc('month', now())::date, 25000000, v_cat_id, 'Monthly salon rent', 'Landlord', 'paid', v_admin, v_admin, now(), now());
   select id into v_cat_id from public.expense_categories where name = 'Electricity';
-  insert into public.expenses (organisation_id, expense_date, amount_kobo, category_id, description, payee, status, entered_by, approved_by, approved_at) values
-    (v_org, current_date - 3, 4500000, v_cat_id, 'IBEDC bill', 'IBEDC', 'approved', v_stylist, v_admin, now());
+  insert into public.expenses (organisation_id, salon_id, expense_date, amount_kobo, category_id, description, payee, status, entered_by, approved_by, approved_at) values
+    (v_org, '77770001-0000-0000-0000-000000000001', current_date - 3, 4500000, v_cat_id, 'IBEDC bill', 'IBEDC', 'approved', v_stylist, v_admin, now());
   select id into v_cat_id from public.expense_categories where name = 'Fuel';
-  insert into public.expenses (organisation_id, expense_date, amount_kobo, category_id, description, payee, status, entered_by) values
-    (v_org, current_date - 1, 1500000, v_cat_id, 'Generator fuel', 'Total station', 'pending_approval', v_stylist);
+  insert into public.expenses (organisation_id, salon_id, expense_date, amount_kobo, category_id, description, payee, status, entered_by) values
+    (v_org, '77770001-0000-0000-0000-000000000001', current_date - 1, 1500000, v_cat_id, 'Generator fuel', 'Total station', 'pending_approval', v_stylist);
   select id into v_cat_id from public.expense_categories where name = 'Marketing';
-  insert into public.expenses (organisation_id, expense_date, amount_kobo, category_id, description, payee, status, entered_by) values
-    (v_org, current_date, 800000, v_cat_id, 'Instagram promotion', 'Meta', 'draft', v_admin);
+  insert into public.expenses (organisation_id, salon_id, expense_date, amount_kobo, category_id, description, payee, status, entered_by) values
+    (v_org, '77770001-0000-0000-0000-000000000001', current_date, 800000, v_cat_id, 'Instagram promotion', 'Meta', 'draft', v_admin);
   select id into v_cat_id from public.expense_categories where name = 'Inventory Purchases';
   insert into public.expenses (organisation_id, expense_date, amount_kobo, category_id, description, payee, supplier_id, stock_receipt_id, status, entered_by, approved_by, approved_at) values
     (v_org, current_date - 2, 1010000, v_cat_id, 'Consumables restock KBS-2041', 'Kwara Beauty Supplies', v_sup1, v_receipt, 'approved', v_admin, v_stylist, now());
@@ -553,3 +543,30 @@ begin
 end $p3$;
 
 commit;
+
+-- ============================================================================
+-- v3 SEED — SALONS (Session A)
+-- Ilorin (open) is created by migration 0019 and every pre-existing row is
+-- backfilled onto it. Here: the Abuja expansion salon on the waitlist, with
+-- early signups captured per city (v3 §3.3).
+-- ============================================================================
+insert into public.staff_salon_assignments (profile_id, salon_id, is_primary)
+select p.id, '77770001-0000-0000-0000-000000000001', true
+from public.profiles p where p.role in ('staff', 'admin')
+on conflict (profile_id, salon_id) do nothing;
+
+insert into public.salons
+  (id, name, slug, city, state, address, chair_capacity, status, launch_date)
+values
+  ('77770001-0000-0000-0000-000000000002', 'Sisters Lounge Salon Abuja',
+   'abuja', 'Abuja', 'FCT', 'Wuse II, Abuja', 4, 'waitlist',
+   (now() at time zone 'Africa/Lagos')::date + 90)
+on conflict (id) do nothing;
+
+insert into public.city_waitlist (city, salon_id, full_name, contact, contact_type) values
+  ('Abuja', '77770001-0000-0000-0000-000000000002', 'Hauwa Sule',
+   '+2348011112222', 'whatsapp'),
+  ('Abuja', '77770001-0000-0000-0000-000000000002', 'Rukayat Bello',
+   'rukayat@example.test', 'email'),
+  ('Lagos', null, 'Amina Yusuf', '+2348033334444', 'whatsapp')
+on conflict (city, contact) do nothing;

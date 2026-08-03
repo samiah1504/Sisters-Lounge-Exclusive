@@ -19,20 +19,20 @@ export default async function CapacityPage() {
   await requireAdmin();
   const supabase = await createClient();
   const [
-    { data: settingsRows }, { data: sched }, { data: hours },
-    { data: plans }, { data: subs }, { data: entitlements },
+    { data: settingsRows }, { data: salons }, { data: salonSettings },
+    { data: hours }, { data: plans }, { data: subs }, { data: entitlements },
   ] = await Promise.all([
     supabase.from("subscription_capacity_settings").select("*").limit(1),
-    supabase.from("scheduling_settings").select("*").limit(1),
-    supabase.from("business_hours").select("*"),
-    supabase.from("subscription_plans").select("id, name, subscriber_limit, visits_included, location_type").is("archived_at", null),
+    supabase.from("salons").select("id, name, city, chair_capacity").eq("status", "open"),
+    supabase.from("salon_settings").select("*"),
+    supabase.from("salon_hours").select("*"),
+    supabase.from("subscription_plans").select("id, name, subscriber_limit, visits_included").is("archived_at", null),
     supabase.from("subscriptions").select("id, plan_id, status")
       .in("status", ["active", "expiring_soon", "renewal_due"]),
     supabase.from("visit_entitlements").select("status, cycle:subscription_cycles!inner(status)")
       .eq("subscription_cycles.status", "active"),
   ]);
   const settings = settingsRows?.[0] as Row;
-  const s = sched?.[0] as Row;
 
   const active = (subs ?? []) as Row[];
   const ents = (entitlements ?? []) as Row[];
@@ -41,23 +41,23 @@ export default async function CapacityPage() {
   const reserved = ents.filter((e) => e.status === "reserved").length;
   const remaining = ents.filter((e) => e.status === "available").length;
 
-  const weeklySlots = weeklySlotCapacity(
-    (hours ?? []) as never, s?.slot_duration_minutes ?? 30, s?.max_bookings_per_slot ?? 3);
+  // Slot supply = sum across OPEN salons (availability is per salon).
+  const weeklySlots = ((salons ?? []) as Row[]).reduce((sum, salon) => {
+    const ss = ((salonSettings ?? []) as Row[]).find((x) => x.salon_id === salon.id);
+    const salonHours = ((hours ?? []) as Row[]).filter((h) => h.salon_id === salon.id);
+    return sum + weeklySlotCapacity(
+      salonHours as never,
+      ss?.slot_duration_minutes ?? 30,
+      Math.min(ss?.max_bookings_per_slot ?? 3, salon.chair_capacity ?? 3));
+  }, 0);
   const monthlySlots = Math.round(weeklySlots * 4.33);
   const util = utilizationPercent(promised, monthlySlots);
-
-  const homePlans = new Set(((plans ?? []) as Row[])
-    .filter((p) => p.location_type === "home").map((p) => p.id));
-  const homeActive = active.filter((x) => homePlans.has(x.plan_id)).length;
-  const homeCapacity = (s?.home_service_capacity_per_day ?? 0) * 26; // ~open days/month
 
   const warnings = capacityWarnings({
     utilizationPercent: util,
     warningThreshold: settings?.warning_threshold_percent ?? 80,
     visitsRemaining: remaining + reserved,
     slotsRemaining: Math.max(0, monthlySlots - completed),
-    homePromised: homeActive * 2,
-    homeCapacity,
     subscribersWithoutBookings: 0, // detailed view lives in Retention
     activeSubscribers: active.length,
   });
@@ -97,7 +97,7 @@ export default async function CapacityPage() {
         <div className="mt-2"><Meter value={Math.min(util, 100)} max={100} /></div>
         <p className="mt-1.5 text-xs text-ink-soft">
           {promised} promised visits vs ~{monthlySlots} bookable slots this
-          month ({weeklySlots}/week from opening hours × capacity per slot).
+          month ({weeklySlots}/week across all open salons).
         </p>
       </Card>
 
@@ -155,10 +155,6 @@ export default async function CapacityPage() {
               <Field label="Global active-subscriber limit (blank = none)" htmlFor="global_limit">
                 <input id="global_limit" name="global_limit" type="number" min={1}
                   defaultValue={settings.global_active_subscriber_limit ?? ""} className={inputClass} />
-              </Field>
-              <Field label="Home-service subscriber limit" htmlFor="home_limit">
-                <input id="home_limit" name="home_limit" type="number" min={1}
-                  defaultValue={settings.home_service_subscriber_limit ?? ""} className={inputClass} />
               </Field>
               <Field label="Max promised visits per cycle" htmlFor="max_visits">
                 <input id="max_visits" name="max_visits" type="number" min={1}

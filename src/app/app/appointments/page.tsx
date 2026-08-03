@@ -32,7 +32,7 @@ export default async function AppointmentsPage() {
             <p className="text-sm text-ink-soft">
               {formatDateTime(a.starts_at)}
               {a.child ? ` · for ${a.child.full_name}` : ""}
-              {a.location_type === "home" ? " · home service" : ""}
+              {a.salon ? ` · ${a.salon.name}` : ""}
             </p>
             {a.extras.length > 0 && (
               <p className="mt-0.5 text-sm text-brand-700">

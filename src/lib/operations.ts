@@ -84,8 +84,6 @@ export function capacityWarnings(input: {
   warningThreshold: number;
   visitsRemaining: number;
   slotsRemaining: number;
-  homePromised: number;
-  homeCapacity: number;
   subscribersWithoutBookings: number;
   activeSubscribers: number;
 }): CapacityWarning[] {
@@ -113,15 +111,6 @@ export function capacityWarnings(input: {
       title: "Promised visits exceed remaining slots",
       explanation: `${input.visitsRemaining} visits are still owed this cycle but only ${input.slotsRemaining} bookable slots remain.`,
       action: "Add opening hours, increase per-slot capacity, or contact subscribers early.",
-      href: "/admin/settings",
-    });
-  }
-  if (input.homeCapacity > 0 && input.homePromised > input.homeCapacity) {
-    out.push({
-      severity: "warning",
-      title: "Home-service demand above capacity",
-      explanation: `${input.homePromised} home visits promised against ${input.homeCapacity} available this cycle.`,
-      action: "Raise daily home-service capacity or pause home-service plans.",
       href: "/admin/settings",
     });
   }

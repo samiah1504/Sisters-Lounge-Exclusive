@@ -46,7 +46,7 @@ export default async function ReschedulePage({
       <RescheduleForm
         appointmentId={appt.id}
         durationMinutes={appt.duration_minutes}
-        location={appt.location_type}
+        salonId={appt.salon_id}
         minNoticeHours={scheduling.minNoticeHours}
         maxAdvanceDays={scheduling.maxAdvanceDays}
       />

@@ -62,13 +62,7 @@ export default async function PlanDetailPage({
         <ul className="mt-3 grid gap-1.5 text-[15px] text-ink-soft">
           <li>✦ {plan.visits_included} salon visit{plan.visits_included > 1 ? "s" : ""} each monthly cycle</li>
           <li>✦ Visits must be at least {plan.min_visit_interval_days} days apart</li>
-          <li>
-            ✦ {plan.location_type === "home"
-              ? "Home service only — within Ilorin"
-              : plan.location_type === "both"
-                ? "Salon visits or home service (Ilorin)"
-                : "In-salon visits"}
-          </li>
+          <li>✦ Valid at every Sisters Lounge Salon</li>
           <li>
             ✦ Available days:{" "}
             {plan.available_days.length === 7

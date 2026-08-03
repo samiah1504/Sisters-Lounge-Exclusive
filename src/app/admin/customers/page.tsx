@@ -20,7 +20,7 @@ export default async function AdminCustomersPage({
   const { data } = await supabase
     .from("customer_profiles")
     .select(
-      "id, city, service_area, account_status, created_at, " +
+      "id, city, account_status, created_at, " +
         "profile:profiles(full_name, email, phone), " +
         "children:children(id), " +
         "subscriptions:subscriptions(id, status), " +

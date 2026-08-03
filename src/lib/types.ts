@@ -20,8 +20,6 @@ export interface CustomerProfile {
   city: string | null;
   state: string | null;
   preferred_contact_method: "phone" | "whatsapp" | "email";
-  service_area: string;
-  service_area_confirmed: boolean;
   marketing_consent: boolean;
   notification_preferences: Record<string, boolean>;
   account_status: "active" | "suspended" | "archived";
@@ -55,7 +53,6 @@ export interface SubscriptionCategory {
   is_active: boolean;
   is_public: boolean;
   eligibility_notes: string;
-  service_location_type: "salon" | "home" | "both";
   archived_at: string | null;
 }
 
@@ -67,8 +64,6 @@ export interface Service {
   category: string;
   estimated_duration_minutes: number;
   is_active: boolean;
-  salon_available: boolean;
-  home_available: boolean;
   eligible_age_group: "all" | "adults" | "children";
   required_skill: string | null;
   image_url: string | null;
@@ -91,7 +86,6 @@ export interface SubscriptionPlan {
   currency: "NGN";
   visits_included: number;
   min_visit_interval_days: number;
-  location_type: "salon" | "home" | "both";
   eligible_age_group: "all" | "adults" | "children";
   eligibility_notes: string;
   available_days: number[];
@@ -118,8 +112,6 @@ export interface ExtraService {
   is_active: boolean;
   is_public: boolean;
   is_featured: boolean;
-  salon_available: boolean;
-  home_available: boolean;
   required_skill: string | null;
   min_advance_notice_hours: number;
   payment_requirement: "pay_before_confirmation" | "pay_at_salon" | "admin_decides";
@@ -140,6 +132,8 @@ export interface Subscription {
   plan_version_id: string;
   status: SubscriptionStatus;
   opt_out_next_renewal: boolean;
+  /** Salon chosen at signup — attribution and defaults only, never a restriction. */
+  home_salon_id: string;
   created_at: string;
 }
 
@@ -173,7 +167,7 @@ export interface Appointment {
   subscription_id: string | null;
   cycle_id: string | null;
   service_id: string;
-  location_type: "salon" | "home";
+  salon_id: string;
   starts_at: string;
   ends_at: string;
   duration_minutes: number;
@@ -193,7 +187,7 @@ export interface ConsultationType {
   full_description: string;
   price_kobo: number;
   duration_minutes: number;
-  location_type: "salon" | "home" | "virtual";
+  location_type: "salon" | "virtual";
   subscriber_only: boolean;
   non_subscriber_available: boolean;
   subscriber_discount_kobo: number;

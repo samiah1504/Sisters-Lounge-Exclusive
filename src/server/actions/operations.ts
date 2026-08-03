@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getDefaultSalonId } from "@/server/stock";
 import { requireAdmin, requireCustomer, requireStaffOrAdmin } from "@/server/auth";
 
 export interface ActionState {
@@ -127,7 +128,11 @@ export async function postStockMovement(
   const outward = ["salon_usage", "retail_sale", "damage", "expired_stock",
     "theft_or_loss", "return_to_supplier", "transfer"].includes(type);
   const supabase = await createClient();
+  const salonId = String(formData.get("salon_id") ?? "").trim()
+    || (await getDefaultSalonId(supabase));
+  if (!salonId) return { error: "No open salon to post stock against." };
   const { error } = await supabase.rpc("fn_post_stock_movement", {
+    p_salon_id: salonId,
     p_item_id: itemId,
     p_movement_type: type,
     p_quantity: outward ? -Math.abs(qty) : Math.abs(qty),
@@ -191,9 +196,12 @@ export async function createStockReceipt(
   if (lines.length === 0) return { error: "Add at least one item with a quantity." };
 
   const supabase = await createClient();
+  const salonId = await getDefaultSalonId(supabase);
+  if (!salonId) return { error: "No open salon to receive stock into." };
   const { data: receipt, error } = await supabase
     .from("stock_receipts")
     .insert({
+      salon_id: salonId,
       supplier_id: supplierId,
       invoice_number: invoice,
       payment_status: String(formData.get("payment_status") ?? "unpaid"),
@@ -256,9 +264,12 @@ export async function createStockCount(
   }
   if (lines.length === 0) return { error: "Enter at least one counted quantity." };
 
+  const salonId = await getDefaultSalonId(supabase);
+  if (!salonId) return { error: "No open salon to count stock at." };
   const { data: count, error } = await supabase
     .from("stock_counts")
     .insert({
+      salon_id: salonId,
       location: String(formData.get("location") ?? "salon"),
       started_by: session.userId,
       notes: String(formData.get("notes") ?? ""),
@@ -267,15 +278,17 @@ export async function createStockCount(
     .single();
   if (error) return { error: friendly(error.message) };
 
-  const { data: items } = await supabase
-    .from("inventory_items")
-    .select("id, quantity_on_hand")
-    .in("id", lines.map((l) => l.item_id));
+  const { data: stock } = await supabase
+    .from("salon_product_stock")
+    .select("item_id, quantity_on_hand")
+    .eq("salon_id", salonId)
+    .in("item_id", lines.map((l) => l.item_id));
   const { error: e2 } = await supabase.from("stock_count_items").insert(
     lines.map((l) => ({
       count_id: count.id,
       item_id: l.item_id,
-      system_quantity: items?.find((i) => i.id === l.item_id)?.quantity_on_hand ?? 0,
+      system_quantity: Number(
+        stock?.find((i) => i.item_id === l.item_id)?.quantity_on_hand ?? 0),
       counted_quantity: l.counted,
       reason: l.reason,
     })),
@@ -687,7 +700,6 @@ export async function saveCapacitySettings(
     .from("subscription_capacity_settings")
     .update({
       global_active_subscriber_limit: num("global_limit"),
-      home_service_subscriber_limit: num("home_limit"),
       max_promised_visits_per_cycle: num("max_visits"),
       warning_threshold_percent: Number(formData.get("warning_threshold") ?? 80),
       hard_stop_threshold_percent: Number(formData.get("hard_stop_threshold") ?? 100),

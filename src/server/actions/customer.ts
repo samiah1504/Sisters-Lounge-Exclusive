@@ -18,8 +18,7 @@ function friendlyDbError(message: string): string {
     [/SUBSCRIPTION_INACTIVE/, "This subscription is not active."],
     [/RECIPIENT_MISMATCH/, "This subscription is not for the selected person."],
     [/SERVICE_UNAVAILABLE/, "That service is not available for this booking."],
-    [/LOCATION_INELIGIBLE/, "That location is not available for this plan or service."],
-    [/SERVICE_AREA/, "Home service is currently available only within Ilorin."],
+    [/SALON_UNAVAILABLE/, "That salon is not currently open for visits."],
     [/DAY_UNAVAILABLE/, "Your plan does not allow bookings on this day."],
     [/NOTICE:/, "That time is too soon — please pick a later slot."],
     [/ADDON_NOTICE/, "One of your add-ons needs more advance notice."],
@@ -50,8 +49,6 @@ const profileSchema = z.object({
   city: z.string().trim().min(2, "Enter your city").max(80),
   state: z.string().trim().min(2, "Enter your state").max(80),
   preferred_contact_method: z.enum(["phone", "whatsapp", "email"]),
-  service_area: z.string().trim().min(2).max(80),
-  service_area_confirmed: z.boolean(),
   marketing_consent: z.boolean(),
   notify_booking_reminders: z.boolean(),
   notify_renewal_reminders: z.boolean(),
@@ -71,8 +68,6 @@ export async function updateProfile(
     city: formData.get("city"),
     state: formData.get("state"),
     preferred_contact_method: formData.get("preferred_contact_method"),
-    service_area: formData.get("service_area") || "ilorin",
-    service_area_confirmed: formData.get("service_area_confirmed") === "on",
     marketing_consent: formData.get("marketing_consent") === "on",
     notify_booking_reminders: formData.get("notify_booking_reminders") === "on",
     notify_renewal_reminders: formData.get("notify_renewal_reminders") === "on",
@@ -94,8 +89,6 @@ export async function updateProfile(
       city: d.city,
       state: d.state,
       preferred_contact_method: d.preferred_contact_method,
-      service_area: d.service_area.toLowerCase(),
-      service_area_confirmed: d.service_area_confirmed,
       marketing_consent: d.marketing_consent,
       notification_preferences: {
         booking_reminders: d.notify_booking_reminders,
@@ -250,7 +243,7 @@ const bookingSchema = z.object({
   subscription_id: z.string().uuid(),
   service_id: z.string().uuid(),
   starts_at: z.string().datetime({ offset: true }),
-  location_type: z.enum(["salon", "home"]),
+  salon_id: z.string().uuid(),
   child_id: z.string().uuid().nullable(),
   extra_service_ids: z.array(z.string().uuid()).max(6),
   notes: z.string().trim().max(500).default(""),
@@ -260,7 +253,7 @@ export async function bookAppointment(payload: {
   subscription_id: string;
   service_id: string;
   starts_at: string;
-  location_type: "salon" | "home";
+  salon_id: string;
   child_id: string | null;
   extra_service_ids: string[];
   notes: string;
@@ -274,7 +267,7 @@ export async function bookAppointment(payload: {
     p_subscription_id: parsed.data.subscription_id,
     p_service_id: parsed.data.service_id,
     p_starts_at: parsed.data.starts_at,
-    p_location_type: parsed.data.location_type,
+    p_salon_id: parsed.data.salon_id,
     p_child_id: parsed.data.child_id,
     p_extra_service_ids: parsed.data.extra_service_ids,
     p_customer_notes: parsed.data.notes,

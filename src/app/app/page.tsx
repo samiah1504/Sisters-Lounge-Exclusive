@@ -48,10 +48,6 @@ export default async function DashboardPage() {
     full_name: session.profile.full_name,
     phone: session.profile.phone,
     whatsapp_number: session.customerProfile.whatsapp_number,
-    address: session.customerProfile.address,
-    city: session.customerProfile.city,
-    state: session.customerProfile.state,
-    service_area_confirmed: session.customerProfile.service_area_confirmed,
   });
 
   const activeOverviews = overviews.filter((o) =>

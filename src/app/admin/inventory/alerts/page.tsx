@@ -6,6 +6,7 @@ import { expiryStatus, stockLevel } from "@/lib/operations";
 import { formatNaira, lagosDateOf } from "@/lib/format";
 import { Badge, Card } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
+import { getStockTotals } from "@/server/stock";
 
 export const metadata: Metadata = { title: "Inventory Alerts" };
 export const dynamic = "force-dynamic";
@@ -39,17 +40,22 @@ function Section({ title, tone, rows, detail }: {
 export default async function InventoryAlertsPage() {
   await requireStaffOrAdmin();
   const supabase = await createClient();
-  const [{ data: items }, { data: settings }, { data: adjustments }] = await Promise.all([
+  const [{ data: items }, { data: settings }, { data: adjustments }, totals] = await Promise.all([
     supabase.from("inventory_items").select("*").is("archived_at", null).eq("is_active", true),
     supabase.from("inventory_settings").select("*").limit(1),
     supabase.from("inventory_movements")
       .select("*, item:inventory_items(name)")
       .in("movement_type", ["stock_count_correction", "manual_adjustment", "theft_or_loss", "damage"])
       .order("created_at", { ascending: false }).limit(20),
+    getStockTotals(supabase),
   ]);
   const s = settings?.[0];
   const today = lagosDateOf(new Date());
-  const all = (items ?? []) as Row[];
+  const all = ((items ?? []) as Row[]).map((i): Row => {
+    const t = totals.get(i.id) ?? { on_hand: 0, reserved: 0, available: 0 };
+    return { ...i, quantity_on_hand: t.on_hand,
+             quantity_reserved: t.reserved, quantity_available: t.available };
+  });
   const consumables = all.filter((i) => i.item_type !== "equipment");
 
   const outOfStock = consumables.filter((i) => stockLevel(i as never) === "out_of_stock");

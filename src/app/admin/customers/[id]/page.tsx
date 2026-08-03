@@ -90,9 +90,7 @@ export default async function AdminCustomerDetailPage({
             {customer.whatsapp_number ?? "—"}
           </p>
           <p className="text-sm text-ink-soft">
-            {customer.address ? `${customer.address}, ${customer.city}, ${customer.state}` : "No address"} ·
-            area: {customer.service_area}
-            {customer.service_area_confirmed ? " ✓" : " (unconfirmed)"}
+            {customer.address ? `${customer.address}, ${customer.city}, ${customer.state}` : "No address"}
           </p>
         </div>
         {customer.account_status === "archived" && <Badge tone="gray">Archived</Badge>}

@@ -91,8 +91,6 @@ export function ExtraServiceForm({
 
       <div className="flex flex-wrap gap-4">
         {[
-          ["salon_available", "Salon", extra?.salon_available ?? true],
-          ["home_available", "Home service", extra?.home_available ?? false],
           ["is_active", "Active", extra?.is_active ?? true],
           ["is_public", "Public", extra?.is_public ?? true],
           ["is_featured", "Featured", extra?.is_featured ?? false],

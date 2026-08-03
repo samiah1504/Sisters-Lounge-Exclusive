@@ -6,6 +6,7 @@ import { formatNaira } from "@/lib/format";
 import { stockLevel } from "@/lib/operations";
 import { Badge, ButtonLink, Card, EmptyState } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
+import { getStockTotals } from "@/server/stock";
 
 export const metadata: Metadata = { title: "Inventory" };
 export const dynamic = "force-dynamic";
@@ -27,8 +28,12 @@ export default async function AdminInventoryPage({
     .is("archived_at", null)
     .order("name");
   if (type !== "all") query = query.eq("item_type", type);
-  const { data } = await query;
-  let items = (data ?? []) as Row[];
+  const [{ data }, totals] = await Promise.all([query, getStockTotals(supabase)]);
+  let items = ((data ?? []) as Row[]).map((i): Row => {
+    const t = totals.get(i.id) ?? { on_hand: 0, reserved: 0, available: 0 };
+    return { ...i, quantity_on_hand: t.on_hand,
+             quantity_reserved: t.reserved, quantity_available: t.available };
+  });
   if (q) {
     const needle = q.toLowerCase();
     items = items.filter(

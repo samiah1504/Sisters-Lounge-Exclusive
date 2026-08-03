@@ -47,13 +47,6 @@ export function PlanForm({
           <input id="min_visit_interval_days" name="min_visit_interval_days" type="number" min={0} max={30}
             defaultValue={plan?.min_visit_interval_days ?? 7} className={inputClass} />
         </Field>
-        <Field label="Location" htmlFor="location_type">
-          <select id="location_type" name="location_type" defaultValue={plan?.location_type ?? "salon"} className={inputClass}>
-            <option value="salon">Salon only</option>
-            <option value="home">Home service only</option>
-            <option value="both">Salon or home</option>
-          </select>
-        </Field>
         <Field label="Eligible age group" htmlFor="eligible_age_group">
           <select id="eligible_age_group" name="eligible_age_group" defaultValue={plan?.eligible_age_group ?? "all"} className={inputClass}>
             <option value="all">Everyone</option>

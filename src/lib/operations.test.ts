@@ -63,15 +63,12 @@ describe("capacity math", () => {
       warningThreshold: 80,
       visitsRemaining: 40,
       slotsRemaining: 30,
-      homePromised: 5,
-      homeCapacity: 4,
       subscribersWithoutBookings: 5,
       activeSubscribers: 10,
     });
     const titles = w.map((x) => x.title);
     expect(titles.some((t) => /Capacity at 92%/.test(t))).toBe(true);
     expect(titles.some((t) => /exceed remaining slots/.test(t))).toBe(true);
-    expect(titles.some((t) => /Home-service demand/.test(t))).toBe(true);
     expect(titles.some((t) => /have not booked/.test(t))).toBe(true);
   });
 
@@ -82,8 +79,6 @@ describe("capacity math", () => {
         warningThreshold: 80,
         visitsRemaining: 10,
         slotsRemaining: 60,
-        homePromised: 1,
-        homeCapacity: 10,
         subscribersWithoutBookings: 1,
         activeSubscribers: 10,
       }),

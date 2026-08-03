@@ -19,6 +19,8 @@ const HENNA_ITEM = "bbbb1111-0000-0000-0000-000000000005";
 const KIDS_PLAN = "55555555-0000-0000-0000-000000000005"; // limit 3
 const CONV_ZAINAB = "dddd1111-0000-0000-0000-000000000002"; // has internal note
 
+const ILORIN = "77770001-0000-0000-0000-000000000001";
+
 let db: Client;
 
 async function runAs<T>(
@@ -59,11 +61,11 @@ afterAll(async () => {
 describe("stock movement ledger", () => {
   it("posting a movement updates quantity and records before/after", async () => {
     const before = await db.query(
-      "select quantity_on_hand from inventory_items where id = $1", [SHAMPOO]);
+      "select quantity_on_hand from salon_product_stock where item_id = $1 and salon_id = $2", [SHAMPOO, ILORIN]);
     await runAs(ADMIN, (q) =>
-      q("select fn_post_stock_movement($1, 'salon_usage', -100, 'test usage')", [SHAMPOO]));
+      q("select fn_post_stock_movement($2, $1, 'salon_usage', -100, 'test usage')", [SHAMPOO, ILORIN]));
     const after = await db.query(
-      "select quantity_on_hand from inventory_items where id = $1", [SHAMPOO]);
+      "select quantity_on_hand from salon_product_stock where item_id = $1 and salon_id = $2", [SHAMPOO, ILORIN]);
     expect(Number(after.rows[0].quantity_on_hand)).toBe(
       Number(before.rows[0].quantity_on_hand) - 100);
     const mv = await db.query(
@@ -76,14 +78,18 @@ describe("stock movement ledger", () => {
   it("negative stock is prevented by default", async () => {
     await expect(
       runAs(ADMIN, (q) =>
-        q("select fn_post_stock_movement($1, 'salon_usage', -5, 'impossible')", [NAIL_POLISH])),
+        q("select fn_post_stock_movement($2, $1, 'salon_usage', -5, 'impossible')", [NAIL_POLISH, ILORIN])),
     ).rejects.toThrow(/NEGATIVE_STOCK/);
   });
 
   it("quantities cannot be overwritten directly, even by admins", async () => {
+    // Admins have no write policy on salon stock — the update touches 0 rows.
+    const r = await runAs(ADMIN, (q) =>
+      q("update salon_product_stock set quantity_on_hand = 99999 where item_id = $1", [SHAMPOO]));
+    expect(r.rowCount).toBe(0);
+    // Even a direct superuser write is stopped by the guard trigger.
     await expect(
-      runAs(ADMIN, (q) =>
-        q("update inventory_items set quantity_on_hand = 99999 where id = $1", [SHAMPOO])),
+      db.query("update salon_product_stock set quantity_on_hand = 99999 where item_id = $1", [SHAMPOO]),
     ).rejects.toThrow(/STOCK_GUARD/);
   });
 
@@ -113,11 +119,11 @@ describe("stock receiving and counts", () => {
 
   it("approving a stock count posts the variance and locks the count", async () => {
     const before = await db.query(
-      "select quantity_on_hand from inventory_items where id = $1", [HENNA_ITEM]);
+      "select quantity_on_hand from salon_product_stock where item_id = $1 and salon_id = $2", [HENNA_ITEM, ILORIN]);
     await runAs(ADMIN, (q) =>
       q("select fn_review_stock_count($1, true, 'verified spillage')", [COUNT]));
     const after = await db.query(
-      "select quantity_on_hand from inventory_items where id = $1", [HENNA_ITEM]);
+      "select quantity_on_hand from salon_product_stock where item_id = $1 and salon_id = $2", [HENNA_ITEM, ILORIN]);
     expect(Number(after.rows[0].quantity_on_hand)).toBe(
       Number(before.rows[0].quantity_on_hand) - 100);
     await expect(
@@ -187,8 +193,9 @@ describe("expense workflow", () => {
     expenseId = await runAs(STYLIST, async (q) => {
       const cat = await q("select id from expense_categories where name = 'Fuel'");
       const r = await q(
-        `insert into expenses (organisation_id, amount_kobo, category_id, description, entered_by)
-         values ((select id from organisations limit 1), 500000, $1, 'Test fuel', $2)
+        `insert into expenses (organisation_id, amount_kobo, category_id, description, entered_by, salon_id)
+         values ((select id from organisations limit 1), 500000, $1, 'Test fuel', $2,
+                 '77770001-0000-0000-0000-000000000001')
          returning id`, [cat.rows[0].id, STYLIST]);
       await q("select fn_expense_transition($1, 'submit')", [r.rows[0].id]);
       return r.rows[0].id as string;
@@ -371,16 +378,16 @@ describe("product availability follows linked inventory (0018)", () => {
   it("selling stock down flips the linked product to low, then out of stock", async () => {
     expect(await bonnetStatus()).toBe("in_stock"); // 12 on hand at seed
     await runAs(ADMIN, (q) =>
-      q("select fn_post_stock_movement($1, 'retail_sale', -8, 'sold at reception')", [SATIN_ITEM]));
+      q("select fn_post_stock_movement($2, $1, 'retail_sale', -8, 'sold at reception')", [SATIN_ITEM, ILORIN]));
     expect(await bonnetStatus()).toBe("low_stock"); // 4 left ≤ reorder 5
     await runAs(ADMIN, (q) =>
-      q("select fn_post_stock_movement($1, 'retail_sale', -4, 'sold the rest')", [SATIN_ITEM]));
+      q("select fn_post_stock_movement($2, $1, 'retail_sale', -4, 'sold the rest')", [SATIN_ITEM, ILORIN]));
     expect(await bonnetStatus()).toBe("out_of_stock");
   });
 
   it("receiving stock brings the product back in stock", async () => {
     await runAs(ADMIN, (q) =>
-      q("select fn_post_stock_movement($1, 'stock_received', 20, 'restock')", [SATIN_ITEM]));
+      q("select fn_post_stock_movement($2, $1, 'stock_received', 20, 'restock')", [SATIN_ITEM, ILORIN]));
     expect(await bonnetStatus()).toBe("in_stock");
   });
 });

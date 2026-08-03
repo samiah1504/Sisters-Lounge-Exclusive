@@ -28,10 +28,6 @@ export default async function BookPage({
     full_name: session.profile.full_name,
     phone: session.profile.phone,
     whatsapp_number: session.customerProfile.whatsapp_number,
-    address: session.customerProfile.address,
-    city: session.customerProfile.city,
-    state: session.customerProfile.state,
-    service_area_confirmed: session.customerProfile.service_area_confirmed,
   });
 
   if (!completion.complete) {
@@ -101,7 +97,6 @@ export default async function BookPage({
             categories.find((c) => c.id === o.plan.category_id)?.name ?? "",
           childId: o.child?.id ?? null,
           childName: o.child?.full_name ?? null,
-          locationType: o.plan.location_type,
           intervalDays: o.plan.min_visit_interval_days,
           availableDays: o.plan.available_days,
           remaining: o.summary.remaining,
@@ -115,9 +110,14 @@ export default async function BookPage({
         planServices={planServices ?? []}
         extras={extras}
         rules={rules}
-        scheduling={scheduling}
+        scheduling={{
+          minNoticeHours: scheduling.minNoticeHours,
+          maxAdvanceDays: scheduling.maxAdvanceDays,
+        }}
+        salons={scheduling.salons}
+        salonHours={scheduling.salonHours}
+        homeSalonId={bookable[0].subscription.home_salon_id ?? null}
         preselectSubscription={preselect ?? null}
-        serviceArea={session.customerProfile.service_area}
       />
     </div>
   );

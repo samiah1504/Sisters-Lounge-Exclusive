@@ -74,13 +74,7 @@ export default async function PlansPage({
             <ul className="mt-2 grid gap-1 text-sm text-ink-soft">
               <li>✦ {plan.visits_included} visit{plan.visits_included > 1 ? "s" : ""} per month</li>
               <li>✦ Visits at least {plan.min_visit_interval_days} days apart</li>
-              <li>
-                ✦ {plan.location_type === "home"
-                  ? "Home service (Ilorin only)"
-                  : plan.location_type === "both"
-                    ? "Salon or home service"
-                    : "In-salon visits"}
-              </li>
+              <li>✦ Valid at every Sisters Lounge Salon</li>
             </ul>
             <div className="mt-4 flex gap-2 pt-2">
               <ButtonLink href={`/plans/${plan.slug}`} variant="outline" className="flex-1">

@@ -25,7 +25,7 @@ export default async function AdminBookingDetailPage({
     supabase
       .from("appointments")
       .select(
-        "*, service:services(name, required_skill), child:children(full_name), " +
+        "*, service:services(name, required_skill), child:children(full_name), salon:salons(name, city), " +
           "customer:customer_profiles(id, whatsapp_number, address, city, profile:profiles(full_name, phone)), " +
           "stylist:profiles!appointments_stylist_profile_id_fkey(id, full_name), " +
           "extras:appointment_extra_services(extra_service_id, price_kobo, duration_minutes, payment_requirement, extra_service:extra_services(name)), " +
@@ -83,11 +83,11 @@ export default async function AdminBookingDetailPage({
               .eq("is_active", true)
           : Promise.resolve({ data: [] }),
         supabase
-          .from("inventory_items")
-          .select("id, name, unit, quantity_available")
-          .eq("is_active", true)
-          .eq("salon_use_available", true)
-          .order("name"),
+          .from("salon_product_stock")
+          .select("quantity_available, item:inventory_items!inner(id, name, unit, is_active, salon_use_available)")
+          .eq("salon_id", appt.salon_id)
+          .eq("inventory_items.is_active", true)
+          .eq("inventory_items.salon_use_available", true),
       ]);
     usage = ((usageRows ?? []) as Row[])[0] ?? null;
     const merged = new Map<string, { item_id: string; name: string; unit: string; planned: number }>();
@@ -101,10 +101,14 @@ export default async function AdminBookingDetailPage({
       });
     }
     prefill = [...merged.values()];
-    availableItems = (invItems ?? []).map((i) => ({
-      id: i.id, name: i.name, unit: i.unit,
-      quantity_available: Number(i.quantity_available),
-    }));
+    availableItems = ((invItems ?? []) as Row[])
+      .map((r) => ({
+        id: (r.item as Row).id as string,
+        name: (r.item as Row).name as string,
+        unit: (r.item as Row).unit as string,
+        quantity_available: Number(r.quantity_available),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   return (
@@ -132,9 +136,14 @@ export default async function AdminBookingDetailPage({
         <p className="text-sm text-ink-soft">
           {cust?.profile?.phone} · WhatsApp {cust?.whatsapp_number ?? "—"}
         </p>
-        {appt.location_type === "home" && (
+        {appt.salon && (
+          <p className="mt-1 text-sm text-ink-soft">
+            Salon: {(appt.salon as { name: string; city: string }).name}
+          </p>
+        )}
+        {appt.was_home_visit && (
           <p className="mt-1 text-sm text-amber-700">
-            Home service: {cust?.address}, {cust?.city}
+            Historical home-service visit (retired model)
           </p>
         )}
         {appt.customer_notes && (

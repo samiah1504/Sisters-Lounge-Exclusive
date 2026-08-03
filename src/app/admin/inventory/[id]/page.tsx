@@ -8,6 +8,7 @@ import { postStockMovement } from "@/server/actions/operations";
 import { formatDateTime, formatNaira } from "@/lib/format";
 import { Badge, Card, Field, inputClass, statusLabel } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
+import { getStockTotals } from "@/server/stock";
 
 export const metadata: Metadata = { title: "Inventory Item" };
 export const dynamic = "force-dynamic";
@@ -31,6 +32,8 @@ export default async function InventoryItemPage({
     ]);
   const item = ((items ?? []) as Row[])[0];
   if (!item) notFound();
+  const stock = (await getStockTotals(supabase)).get(item.id)
+    ?? { on_hand: 0, reserved: 0, available: 0 };
   const isAdmin = session.profile.role === "admin";
 
   return (
@@ -44,25 +47,25 @@ export default async function InventoryItemPage({
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="rounded-xl bg-brand-50 p-3">
             <p className="font-display text-2xl font-bold text-brand-900">
-              {Number(item.quantity_on_hand)}
+              {stock.on_hand}
             </p>
             <p className="text-xs font-semibold text-ink-soft">On hand ({item.unit})</p>
           </div>
           <div className="rounded-xl bg-brand-50 p-3">
             <p className="font-display text-2xl font-bold text-brand-900">
-              {Number(item.quantity_reserved)}
+              {stock.reserved}
             </p>
             <p className="text-xs font-semibold text-ink-soft">Reserved</p>
           </div>
           <div className="rounded-xl bg-brand-50 p-3">
             <p className="font-display text-2xl font-bold text-brand-900">
-              {Number(item.quantity_available)}
+              {stock.available}
             </p>
             <p className="text-xs font-semibold text-ink-soft">Available</p>
           </div>
         </div>
         <p className="mt-2 text-center text-xs text-ink-soft">
-          Stock value: {formatNaira(Number(item.quantity_on_hand) * item.cost_price_kobo)} ·
+          Stock value: {formatNaira(stock.on_hand * item.cost_price_kobo)} ·
           reorder at {Number(item.reorder_level)} {item.unit}
         </p>
       </Card>

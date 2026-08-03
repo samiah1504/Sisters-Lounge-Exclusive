@@ -25,7 +25,6 @@ export interface WizardSubscription {
   categoryName: string;
   childId: string | null;
   childName: string | null;
-  locationType: "salon" | "home" | "both";
   intervalDays: number;
   availableDays: number[];
   remaining: number;
@@ -43,8 +42,6 @@ interface WizardExtra {
   is_active: boolean;
   is_featured: boolean;
   archived_at: string | null;
-  salon_available: boolean;
-  home_available: boolean;
   min_advance_notice_hours: number;
   payment_requirement: string;
   eligible_plan_ids: string[];
@@ -61,14 +58,14 @@ interface Props {
   scheduling: {
     minNoticeHours: number;
     maxAdvanceDays: number;
-    supportedServiceAreas: string[];
-    businessHours: Array<{ day_of_week: number; is_open: boolean }>;
   };
+  salons: Array<{ id: string; name: string; city: string; address: string }>;
+  salonHours: Array<{ salon_id: string; day_of_week: number; is_open: boolean }>;
+  homeSalonId: string | null;
   preselectSubscription: string | null;
-  serviceArea: string;
 }
 
-const STEPS = ["Who & plan", "Where", "Service", "Date & time", "Enhance", "Review"];
+const STEPS = ["Who & plan", "Salon", "Service", "Date & time", "Enhance", "Review"];
 
 export function BookingWizard(props: Props) {
   const router = useRouter();
@@ -79,7 +76,11 @@ export function BookingWizard(props: Props) {
       ? props.preselectSubscription
       : props.subscriptions[0].id,
   );
-  const [location, setLocation] = useState<"salon" | "home">("salon");
+  const [salonId, setSalonId] = useState(
+    props.homeSalonId && props.salons.some((s) => s.id === props.homeSalonId)
+      ? props.homeSalonId
+      : props.salons[0]?.id ?? "",
+  );
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [date, setDate] = useState("");
   const [time, setTime] = useState<string | null>(null); // ISO of chosen slot
@@ -96,13 +97,12 @@ export function BookingWizard(props: Props) {
   // Changing the plan resets every downstream choice (handler, not effect).
   const selectSubscription = (id: string) => {
     const next = props.subscriptions.find((s) => s.id === id)!;
+    void next;
     setSubId(id);
     setServiceId(null);
     setAddonIds([]);
     setTime(null);
     setDate("");
-    if (next.locationType === "home") setLocation("home");
-    else setLocation("salon");
   };
 
   const eligibleServices = useMemo(() => {
@@ -124,9 +124,9 @@ export function BookingWizard(props: Props) {
       pool = pool.filter((s) => allowed.has(s.id));
     }
     return pool.filter(
-      (s) => !excluded.has(s.id) && isServiceEligible(s, { forChild, location }),
+      (s) => !excluded.has(s.id) && isServiceEligible(s, { forChild }),
     );
-  }, [props.services, props.planServices, sub.planId, forChild, location]);
+  }, [props.services, props.planServices, sub.planId, forChild]);
 
   const service = eligibleServices.find((s) => s.id === serviceId) ?? null;
   const selectedExtras = props.extras.filter((e) => addonIds.includes(e.id));
@@ -144,11 +144,10 @@ export function BookingWizard(props: Props) {
         isExtraServiceEligible(e, {
           planId: sub.planId,
           categoryId: sub.categoryId,
-          location,
           startsAt: time ? new Date(time) : undefined,
         }),
       ),
-    [props.extras, sub.planId, sub.categoryId, location, time],
+    [props.extras, sub.planId, sub.categoryId, time],
   );
 
   const recommendedIds = useMemo(() => {
@@ -183,8 +182,9 @@ export function BookingWizard(props: Props) {
   const dateProblem = useMemo(() => {
     if (!date) return null;
     const dow = new Date(date + "T12:00:00").getDay();
-    const bh = props.scheduling.businessHours.find((h) => h.day_of_week === dow);
-    if (bh && !bh.is_open) return "The salon is closed on this day.";
+    const bh = props.salonHours.find(
+      (h) => h.salon_id === salonId && h.day_of_week === dow);
+    if (bh && !bh.is_open) return "This salon is closed on this day.";
     if (!sub.availableDays.includes(dow))
       return "Your plan does not include bookings on this day.";
     const clash = intervalConflict(sub.liveVisitDates, date, sub.intervalDays);
@@ -194,11 +194,7 @@ export function BookingWizard(props: Props) {
     if (date >= sub.cycleEndsOn)
       return "This date falls after your subscription cycle ends.";
     return null;
-  }, [date, props.scheduling.businessHours, sub]);
-
-  const homeAllowed =
-    sub.locationType !== "salon" &&
-    props.scheduling.supportedServiceAreas.includes(props.serviceArea);
+  }, [date, props.salonHours, salonId, sub]);
 
   // Load slots when the chosen date/duration are valid. All setState happens
   // in async continuations (never synchronously in the effect body).
@@ -212,7 +208,7 @@ export function BookingWizard(props: Props) {
       if (!cancelled) setSlotsLoading(true);
       try {
         const r = await fetch(
-          `/api/slots?date=${date}&location=${location}&duration=${duration}`,
+          `/api/slots?date=${date}&salon=${salonId}&duration=${duration}`,
         );
         const json = await r.json();
         if (!cancelled) setSlots(json.slots ?? []);
@@ -226,11 +222,11 @@ export function BookingWizard(props: Props) {
     return () => {
       cancelled = true;
     };
-  }, [date, location, duration, dateProblem]);
+  }, [date, salonId, duration, dateProblem]);
 
   const canNext = [
     sub.remaining > 0,
-    true,
+    salonId !== "",
     serviceId !== null,
     time !== null && !dateProblem,
     true,
@@ -244,7 +240,7 @@ export function BookingWizard(props: Props) {
         subscription_id: sub.id,
         service_id: serviceId!,
         starts_at: time!,
-        location_type: location,
+        salon_id: salonId,
         child_id: sub.childId,
         extra_service_ids: addonIds,
         notes,
@@ -300,31 +296,30 @@ export function BookingWizard(props: Props) {
         </div>
       )}
 
-      {/* STEP 1: location */}
+      {/* STEP 1: salon — visits are valid at every open salon */}
       {step === 1 && (
         <div className="grid gap-3">
-          <button
-            onClick={() => setLocation("salon")}
-            disabled={sub.locationType === "home"}
-            className={`rounded-2xl border p-4 text-left disabled:opacity-40 ${location === "salon" ? "border-brand-600 bg-brand-50" : "border-line bg-white"}`}
-          >
-            <p className="font-semibold">Salon visit</p>
-            <p className="text-sm text-ink-soft">Come to Sisters Lounge, Ilorin.</p>
-          </button>
-          <button
-            onClick={() => setLocation("home")}
-            disabled={!homeAllowed}
-            className={`rounded-2xl border p-4 text-left disabled:opacity-40 ${location === "home" ? "border-brand-600 bg-brand-50" : "border-line bg-white"}`}
-          >
-            <p className="font-semibold">Home service</p>
-            <p className="text-sm text-ink-soft">
-              {sub.locationType === "salon"
-                ? "Not included in this plan."
-                : homeAllowed
-                  ? "A stylist comes to your address."
-                  : "Available only within Ilorin — update your service area in your profile."}
+          {props.salons.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => {
+                setSalonId(s.id);
+                setTime(null);
+              }}
+              className={`rounded-2xl border p-4 text-left ${salonId === s.id ? "border-brand-600 bg-brand-50" : "border-line bg-white"}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold">{s.name}</p>
+                {s.id === props.homeSalonId && <Badge tone="gold">Home salon</Badge>}
+              </div>
+              <p className="mt-1 text-sm text-ink-soft">{s.city} · {s.address}</p>
+            </button>
+          ))}
+          {props.salons.length === 0 && (
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              No salon is currently open for reservations.
             </p>
-          </button>
+          )}
         </div>
       )}
 
@@ -348,7 +343,7 @@ export function BookingWizard(props: Props) {
           ))}
           {eligibleServices.length === 0 && (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              No services available for this plan at this location.
+              No services available for this plan.
             </p>
           )}
         </div>
@@ -479,7 +474,9 @@ export function BookingWizard(props: Props) {
               </div>
               <div className="flex justify-between">
                 <dt className="text-ink-soft">Where</dt>
-                <dd className="font-semibold">{location === "home" ? "Home service" : "Salon"}</dd>
+                <dd className="text-right font-semibold">
+                  {props.salons.find((s) => s.id === salonId)?.name ?? "Salon"}
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-ink-soft">When</dt>

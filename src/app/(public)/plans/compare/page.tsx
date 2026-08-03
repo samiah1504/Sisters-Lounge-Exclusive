@@ -44,12 +44,7 @@ export default async function ComparePlansPage({
     )],
     ["Visits per month", (i) => plans[i].visits_included],
     ["Minimum days between visits", (i) => plans[i].min_visit_interval_days],
-    ["Location", (i) =>
-      plans[i].location_type === "home"
-        ? "Home (Ilorin)"
-        : plans[i].location_type === "both"
-          ? "Salon or home"
-          : "Salon"],
+    ["Location", () => "Every Sisters Lounge Salon"],
     ["Suitable for", (i) =>
       plans[i].eligible_age_group === "all"
         ? "Everyone"

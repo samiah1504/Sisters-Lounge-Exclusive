@@ -28,15 +28,6 @@ describe("isExtraServiceEligible", () => {
     ).toBe(false);
   });
 
-  it("location availability is enforced", () => {
-    expect(
-      isExtraServiceEligible(base, { ...ctx, location: "home" }),
-    ).toBe(false);
-    expect(
-      isExtraServiceEligible({ ...base, home_available: true }, { ...ctx, location: "home" }),
-    ).toBe(true);
-  });
-
   it("plan restriction blocks other plans", () => {
     const restricted = { ...base, eligible_plan_ids: ["plan-2"] };
     expect(isExtraServiceEligible(restricted, ctx)).toBe(false);
@@ -76,26 +67,19 @@ describe("isExtraServiceEligible", () => {
 describe("isServiceEligible", () => {
   const svc = {
     is_active: true,
-    salon_available: true,
-    home_available: true,
     eligible_age_group: "all" as const,
   };
 
   it("age groups are enforced both ways", () => {
     expect(
-      isServiceEligible({ ...svc, eligible_age_group: "adults" }, { forChild: true, location: "salon" }),
+      isServiceEligible({ ...svc, eligible_age_group: "adults" }, { forChild: true }),
     ).toBe(false);
     expect(
-      isServiceEligible({ ...svc, eligible_age_group: "children" }, { forChild: false, location: "salon" }),
+      isServiceEligible({ ...svc, eligible_age_group: "children" }, { forChild: false }),
     ).toBe(false);
     expect(
-      isServiceEligible({ ...svc, eligible_age_group: "children" }, { forChild: true, location: "salon" }),
+      isServiceEligible({ ...svc, eligible_age_group: "children" }, { forChild: true }),
     ).toBe(true);
   });
 
-  it("location availability is enforced", () => {
-    expect(
-      isServiceEligible({ ...svc, home_available: false }, { forChild: false, location: "home" }),
-    ).toBe(false);
-  });
 });

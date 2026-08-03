@@ -89,19 +89,11 @@ export function profileCompletion(p: {
   full_name?: string | null;
   phone?: string | null;
   whatsapp_number?: string | null;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  service_area_confirmed?: boolean | null;
 }): ProfileCompletion {
   const missing: string[] = [];
   if (!p.full_name?.trim()) missing.push("Full name");
   if (!p.phone?.trim()) missing.push("Phone number");
   if (!p.whatsapp_number?.trim()) missing.push("WhatsApp number");
-  if (!p.address?.trim()) missing.push("Address");
-  if (!p.city?.trim()) missing.push("City");
-  if (!p.state?.trim()) missing.push("State");
-  if (!p.service_area_confirmed) missing.push("Service area confirmation");
   return { complete: missing.length === 0, missing };
 }
 

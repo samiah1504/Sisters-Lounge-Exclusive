@@ -14,7 +14,6 @@ const FILTERS = [
   { key: "today", label: "Today" },
   { key: "pending", label: "Needs action" },
   { key: "with-addons", label: "With add-ons" },
-  { key: "home", label: "Home service" },
   { key: "completed", label: "Completed" },
   { key: "missed", label: "Missed" },
   { key: "all", label: "All" },
@@ -32,7 +31,7 @@ export default async function AdminBookingsPage({
   let query = supabase
     .from("appointments")
     .select(
-      "id, starts_at, status, location_type, addon_total_kobo, " +
+      "id, starts_at, status, addon_total_kobo, salon:salons(name, city), " +
         "service:services(name), child:children(full_name), " +
         "customer:customer_profiles(id, profile:profiles(full_name, phone)), " +
         "stylist:profiles!appointments_stylist_profile_id_fkey(full_name), " +
@@ -55,9 +54,6 @@ export default async function AdminBookingsPage({
       break;
     case "with-addons":
       query = query.gt("addon_total_kobo", 0);
-      break;
-    case "home":
-      query = query.eq("location_type", "home");
       break;
     case "completed":
       query = query.eq("status", "completed");
@@ -142,7 +138,7 @@ export default async function AdminBookingsPage({
                       </p>
                       <p className="text-sm text-ink-soft">
                         {(r.service as unknown as { name: string })?.name} · {formatDateTime(r.starts_at)}
-                        {r.location_type === "home" && " · home"}
+                        {r.salon ? ` · ${(r.salon as unknown as { city: string }).city}` : ""}
                       </p>
                       <p className="text-sm">
                         {stylist ? (

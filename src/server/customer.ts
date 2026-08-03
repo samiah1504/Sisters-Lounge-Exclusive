@@ -94,6 +94,7 @@ export async function getChildren(customerId: string): Promise<Child[]> {
 export interface AppointmentWithService extends Appointment {
   service: Service;
   child: Child | null;
+  salon: { id: string; name: string; city: string; address: string } | null;
   extras: Array<{ price_kobo: number; duration_minutes: number; extra_service: { name: string } }>;
 }
 
@@ -104,7 +105,7 @@ export async function getAppointments(
   const { data } = await supabase
     .from("appointments")
     .select(
-      "*, service:services(*), child:children(*), extras:appointment_extra_services(price_kobo, duration_minutes, extra_service:extra_services(name))",
+      "*, service:services(*), child:children(*), salon:salons(id, name, city, address), extras:appointment_extra_services(price_kobo, duration_minutes, extra_service:extra_services(name))",
     )
     .eq("customer_id", customerId)
     .order("starts_at", { ascending: false });
@@ -119,7 +120,7 @@ export async function getAppointment(
   const { data } = await supabase
     .from("appointments")
     .select(
-      "*, service:services(*), child:children(*), extras:appointment_extra_services(price_kobo, duration_minutes, extra_service:extra_services(name))",
+      "*, service:services(*), child:children(*), salon:salons(id, name, city, address), extras:appointment_extra_services(price_kobo, duration_minutes, extra_service:extra_services(name))",
     )
     .eq("customer_id", customerId)
     .eq("id", appointmentId)
@@ -171,12 +172,13 @@ export async function getFavourites(customerId: string) {
 }
 
 export interface SchedulingInfo {
-  slotDurationMinutes: number;
   minNoticeHours: number;
   maxAdvanceDays: number;
   rescheduleDeadlineHours: number;
-  supportedServiceAreas: string[];
-  businessHours: Array<{
+  /** Open salons a member can reserve at (visits are portable, v3 §4.4). */
+  salons: Array<{ id: string; name: string; city: string; address: string }>;
+  salonHours: Array<{
+    salon_id: string;
     day_of_week: number;
     is_open: boolean;
     open_time: string;
@@ -186,19 +188,20 @@ export interface SchedulingInfo {
 
 export async function getSchedulingInfo(): Promise<SchedulingInfo | null> {
   const supabase = await createClient();
-  const [{ data: settings }, { data: hours }] = await Promise.all([
+  const [{ data: settings }, { data: salons }, { data: hours }] = await Promise.all([
     supabase.from("scheduling_settings").select("*").limit(1),
-    supabase.from("business_hours").select("*").order("day_of_week"),
+    supabase.from("salons").select("id, name, city, address")
+      .eq("status", "open").order("name"),
+    supabase.from("salon_hours").select("*").order("day_of_week"),
   ]);
   if (!settings?.[0]) return null;
   const s = settings[0];
   return {
-    slotDurationMinutes: s.slot_duration_minutes,
     minNoticeHours: s.min_booking_notice_hours,
     maxAdvanceDays: s.max_advance_booking_days,
     rescheduleDeadlineHours: s.reschedule_deadline_hours,
-    supportedServiceAreas: s.supported_service_areas,
-    businessHours: hours ?? [],
+    salons: salons ?? [],
+    salonHours: hours ?? [],
   };
 }
 

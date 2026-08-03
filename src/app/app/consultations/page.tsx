@@ -86,7 +86,7 @@ export default async function ConsultationsPage({
               <div className="flex items-start justify-between gap-2">
                 <p className="font-semibold">{t.name}</p>
                 <Badge tone="gold">
-                  {t.location_type === "virtual" ? "Virtual" : t.location_type === "home" ? "Home" : "Salon"}
+                  {t.location_type === "virtual" ? "Virtual" : "Salon"}
                 </Badge>
               </div>
               <p className="mt-1 text-sm text-ink-soft">{t.short_description}</p>

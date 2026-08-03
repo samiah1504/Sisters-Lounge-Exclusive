@@ -92,7 +92,7 @@ describe("RLS: catalogue visibility", () => {
       const r = await q("select slug, status from subscription_plans order by slug");
       return r.rows;
     });
-    expect(rows.length).toBeGreaterThanOrEqual(6);
+    expect(rows.length).toBeGreaterThanOrEqual(5);
     expect(
       rows.every((r: { status: string }) => ["active", "closed"].includes(r.status)),
     ).toBe(true);
@@ -315,7 +315,7 @@ describe("booking, reservation and the seven-day rule", () => {
     bookDate = nextOpenDate(2);
     apptId = await runAs(FATIMA, async (q) => {
       const r = await q(
-        `select fn_book_appointment($1, $2, $3::timestamptz, 'salon', null,
+        `select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001', null,
                                     array[$4, $5]::uuid[], 'First visit!') as id`,
         [fatimaSub, SVC_WASH, at(bookDate, "14:00"), XS_HENNA, XS_TRIM],
       );
@@ -352,19 +352,19 @@ describe("booking, reservation and the seven-day rule", () => {
     const tooSoon = nextOpenDate(4, [bookDate]);
     await expect(
       runAs(FATIMA, (q) =>
-        q("select fn_book_appointment($1, $2, $3::timestamptz)", [
+        q("select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001')", [
           fatimaSub,
           SVC_WASH,
           at(tooSoon, "14:00"),
         ]),
       ),
-    ).rejects.toThrow(/INTERVAL: subscription visits must be at least 7 days apart/);
+    ).rejects.toThrow(/INTERVAL: visits must be at least 7 days apart/);
   });
 
   it("duplicate submission of the same booking is rejected", async () => {
     await expect(
       runAs(FATIMA, (q) =>
-        q("select fn_book_appointment($1, $2, $3::timestamptz)", [
+        q("select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001')", [
           fatimaSub,
           SVC_WASH,
           at(bookDate, "15:00"),
@@ -376,7 +376,7 @@ describe("booking, reservation and the seven-day rule", () => {
   it("adults-only customer cannot book a children-only service", async () => {
     await expect(
       runAs(FATIMA, (q) =>
-        q("select fn_book_appointment($1, $2, $3::timestamptz)", [
+        q("select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001')", [
           fatimaSub,
           SVC_KIDS,
           at(nextOpenDate(10, [bookDate]), "10:00"),
@@ -393,7 +393,7 @@ describe("booking, reservation and the seven-day rule", () => {
     await expect(
       runAs(AISHA, (q) =>
         q(
-          `select fn_book_appointment($1, $2, $3::timestamptz, 'salon', $4, array[$5]::uuid[])`,
+          `select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001', $4, array[$5]::uuid[])`,
           [
             aishaSub.rows[0].id,
             SVC_KIDS,
@@ -414,7 +414,7 @@ describe("booking, reservation and the seven-day rule", () => {
     );
     await expect(
       runAs(ZAINAB, (q) =>
-        q("select fn_book_appointment($1, $2, $3::timestamptz)", [
+        q("select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001')", [
           zainabSub.rows[0].id,
           SVC_WASH,
           at(nextOpenDate(3), "10:00"),
@@ -504,7 +504,7 @@ describe("booking, reservation and the seven-day rule", () => {
     // Fatima has 1 visit left; book it, then mark missed.
     const d = nextOpenDate(20, [bookDate]);
     const appt2 = await runAs(FATIMA, async (q) => {
-      const r = await q("select fn_book_appointment($1, $2, $3::timestamptz) as id", [
+      const r = await q("select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001') as id", [
         fatimaSub,
         SVC_WASH,
         at(d, "12:00"),
@@ -533,13 +533,13 @@ describe("booking, reservation and the seven-day rule", () => {
     d2t.setUTCDate(d2t.getUTCDate() + 7);
     const d2 = d2t.toISOString().slice(0, 10);
     await runAs(FATIMA, (q) =>
-      q("select fn_book_appointment($1, $2, $3::timestamptz)", [
+      q("select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001')", [
         fatimaSub, SVC_WASH, at(d1, "13:00"),
       ]),
     );
     await expect(
       runAs(FATIMA, (q) =>
-        q("select fn_book_appointment($1, $2, $3::timestamptz)", [
+        q("select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001')", [
           fatimaSub, SVC_WASH, at(d2, "13:00"),
         ]),
       ),
@@ -549,7 +549,7 @@ describe("booking, reservation and the seven-day rule", () => {
 
 describe("capacity", () => {
   it("slot capacity is enforced", async () => {
-    await db.query("update scheduling_settings set max_bookings_per_slot = 1");
+    await db.query("update salon_settings set max_bookings_per_slot = 1");
     try {
       const d = nextOpenDate(3);
       const maryamSub = await db.query(
@@ -559,16 +559,16 @@ describe("capacity", () => {
       );
       // Occupy the slot directly (superuser insert bypasses functions).
       await db.query(
-        `insert into appointments (customer_id, service_id, starts_at, ends_at,
+        `insert into appointments (customer_id, service_id, salon_id, starts_at, ends_at,
            duration_minutes, status)
-         select cp.id, $1, $2::timestamptz, $2::timestamptz + interval '60 minutes', 60,
-                'confirmed'
+         select cp.id, $1, '77770001-0000-0000-0000-000000000001', $2::timestamptz,
+                $2::timestamptz + interval '60 minutes', 60, 'confirmed'
          from customer_profiles cp where cp.profile_id = $3`,
         [SVC_WASH, at(d, "16:00"), ZAINAB],
       );
       await expect(
         runAs(MARYAM, (q) =>
-          q("select fn_book_appointment($1, $2, $3::timestamptz)", [
+          q("select fn_book_appointment($1, $2, $3::timestamptz, '77770001-0000-0000-0000-000000000001')", [
             maryamSub.rows[0].id,
             SVC_WASH,
             at(d, "16:00"),
@@ -576,7 +576,7 @@ describe("capacity", () => {
         ),
       ).rejects.toThrow(/CAPACITY|INTERVAL/);
     } finally {
-      await db.query("update scheduling_settings set max_bookings_per_slot = 3");
+      await db.query("update salon_settings set max_bookings_per_slot = 3");
     }
   });
 });

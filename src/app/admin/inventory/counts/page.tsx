@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { getDefaultSalonId, getStockTotals } from "@/server/stock";
 import { requireStaffOrAdmin } from "@/server/auth";
 import { createStockCount, reviewStockCount } from "@/server/actions/operations";
 import { ActionButton, ActionForm } from "@/components/action-form";
@@ -15,13 +16,19 @@ const TONE = { draft: "gray", in_progress: "amber", submitted: "amber", approved
 export default async function StockCountsPage() {
   await requireStaffOrAdmin();
   const supabase = await createClient();
-  const [{ data: counts }, { data: items }] = await Promise.all([
+  const salonId = await getDefaultSalonId(supabase);
+  const [{ data: counts }, { data: rawItems }, totals] = await Promise.all([
     supabase.from("stock_counts")
       .select("*, starter:profiles!stock_counts_started_by_fkey(full_name), items:stock_count_items(system_quantity, counted_quantity, variance, reason, item:inventory_items(name, unit, cost_price_kobo))")
       .order("created_at", { ascending: false }).limit(20),
-    supabase.from("inventory_items").select("id, name, unit, quantity_on_hand")
+    supabase.from("inventory_items").select("id, name, unit")
       .is("archived_at", null).neq("item_type", "equipment").order("name"),
+    getStockTotals(supabase, salonId ?? undefined),
   ]);
+  const items = (rawItems ?? []).map((it) => ({
+    ...it,
+    quantity_on_hand: totals.get(it.id)?.on_hand ?? 0,
+  }));
 
   return (
     <div className="grid gap-4">
@@ -48,7 +55,7 @@ export default async function StockCountsPage() {
             Counted quantities (leave blank to skip an item)
           </p>
           <div className="grid gap-2">
-            {(items ?? []).map((it) => (
+            {items.map((it) => (
               <div key={it.id} className="grid grid-cols-[1fr_110px_1fr] items-center gap-2 rounded-xl border border-line bg-white px-3 py-2">
                 <span className="min-w-0 truncate text-sm">
                   <span className="font-medium">{it.name}</span>
