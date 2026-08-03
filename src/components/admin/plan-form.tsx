@@ -60,7 +60,7 @@ export function PlanForm({
             <option value="draft">Draft</option>
             <option value="active">Active</option>
             <option value="hidden">Hidden</option>
-            <option value="closed">Closed to new subscribers</option>
+            <option value="closed">Closed to new members</option>
           </select>
         </Field>
         <Field label="Display order" htmlFor="display_order">

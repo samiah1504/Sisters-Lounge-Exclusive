@@ -7,7 +7,7 @@ import { formatDuration, formatNaira } from "@/lib/format";
 import { Card } from "@/components/ui";
 import { ConsultationBookingForm } from "@/components/consultation-booking-form";
 
-export const metadata: Metadata = { title: "Book Consultation" };
+export const metadata: Metadata = { title: "Book Expert Consultation" };
 export const dynamic = "force-dynamic";
 
 export default async function BookConsultationPage({

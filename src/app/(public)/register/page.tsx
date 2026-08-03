@@ -10,7 +10,7 @@ export default function RegisterPage() {
         Join Sisters Lounge Exclusive
       </h1>
       <p className="mb-6 mt-2 text-sm text-ink-soft">
-        Create your account to choose a plan, manage your family&apos;s hair care
+        Create your account to become a member, manage your family&apos;s hair care
         and book salon visits.
       </p>
       <RegisterForm />

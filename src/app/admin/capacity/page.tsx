@@ -121,7 +121,7 @@ export default async function CapacityPage() {
       )}
 
       <Card>
-        <p className="font-semibold">Subscribers per plan vs limits</p>
+        <p className="font-semibold">Members per plan vs limits</p>
         <table className="mt-2 w-full text-sm">
           <tbody>
             {((plans ?? []) as Row[]).map((p) => {
@@ -152,7 +152,7 @@ export default async function CapacityPage() {
         {settings && (
           <ActionForm action={saveCapacitySettings} submitLabel="Save capacity settings" warnUnsaved>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Field label="Global active-subscriber limit (blank = none)" htmlFor="global_limit">
+              <Field label="Global active-member limit (blank = none)" htmlFor="global_limit">
                 <input id="global_limit" name="global_limit" type="number" min={1}
                   defaultValue={settings.global_active_subscriber_limit ?? ""} className={inputClass} />
               </Field>

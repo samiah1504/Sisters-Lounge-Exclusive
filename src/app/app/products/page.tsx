@@ -9,7 +9,7 @@ import { ArtBlock, Badge, Card, EmptyState } from "@/components/ui";
 import { FavouriteButton } from "@/components/favourite-button";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Products" };
+export const metadata: Metadata = { title: "Shop" };
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage({

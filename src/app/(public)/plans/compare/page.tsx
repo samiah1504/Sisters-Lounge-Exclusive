@@ -8,7 +8,7 @@ import {
 import { formatNaira } from "@/lib/format";
 import { ButtonLink } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Compare Plans" };
+export const metadata: Metadata = { title: "Compare Memberships" };
 export const dynamic = "force-dynamic";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -70,7 +70,7 @@ export default async function ComparePlansPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <h1 className="heading-rule font-display text-3xl text-ink">Compare Plans</h1>
+      <h1 className="heading-rule font-display text-3xl text-ink">Compare Memberships</h1>
       <p className="mt-3 text-ink-soft">
         Side-by-side comparison{activeCategory ? ` — ${activeCategory.name}` : ""}.
         Unused visits always expire at cycle end on every plan.

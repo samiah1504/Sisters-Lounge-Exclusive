@@ -6,7 +6,7 @@ import { formatDateTime } from "@/lib/format";
 import { Badge, ButtonLink, Card, EmptyState } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
 
-export const metadata: Metadata = { title: "Chat with Your Salon Manager" };
+export const metadata: Metadata = { title: "Chat with Us" };
 export const dynamic = "force-dynamic";
 
 const STATUS_TONE: Record<string, "brand" | "amber" | "green" | "gray"> = {
@@ -28,7 +28,7 @@ export default async function SupportListPage() {
     <div className="grid gap-4">
       <div>
         <h1 className="heading-rule font-display text-2xl text-ink">
-          Chat with Your Salon Manager
+          Chat with Us
         </h1>
         <p className="mt-2 text-sm text-ink-soft">
           Get help with your subscription, appointment, extra services or salon

@@ -38,7 +38,7 @@ export default async function ProductDetailPage({
             {product.subscriber_price_kobo != null &&
               product.subscriber_price_kobo < product.price_kobo && (
                 <span className="ml-2 text-sm font-normal text-emerald-700">
-                  {formatNaira(product.subscriber_price_kobo)} for subscribers
+                  {formatNaira(product.subscriber_price_kobo)} for members
                 </span>
               )}
           </p>

@@ -3,11 +3,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Sisters Lounge Exclusive — Monthly Salon Subscriptions",
+    default: "Sisters Lounge — Nigeria's First Members-Only Natural Hair Club",
     template: "%s · Sisters Lounge Exclusive",
   },
   description:
-    "Salon subscriptions, appointment booking and hair-care management for Sisters Lounge, Ilorin.",
+    "Healthy natural hair through consistent professional care. Members-only salons across Nigeria — no walk-ins, no overcrowding.",
 };
 
 export const viewport: Viewport = {

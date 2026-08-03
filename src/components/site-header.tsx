@@ -6,11 +6,12 @@ import { buttonClass } from "@/components/ui";
 
 const links = [
   { href: "/", label: "Home" },
-  { href: "/plans", label: "Subscription Plans" },
+  { href: "/plans", label: "Membership Plans" },
+  { href: "/salons", label: "Salons" },
   { href: "/#how-it-works", label: "How It Works" },
-  { href: "/#consultations", label: "Consultations" },
-  { href: "/#products", label: "Products" },
-  { href: "/login", label: "Login" },
+  { href: "/#consultations", label: "Expert Consultations" },
+  { href: "/#products", label: "Shop" },
+  { href: "/login", label: "Sign In" },
 ];
 
 export function SiteHeader() {
@@ -52,7 +53,7 @@ export function SiteHeader() {
             onClick={() => setOpen(false)}
             className={buttonClass("primary", "mt-2 lg:ml-2 lg:mt-0")}
           >
-            Join Sisters Lounge Exclusive
+            Become a Member
           </Link>
         </div>
       </nav>

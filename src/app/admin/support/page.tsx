@@ -63,7 +63,7 @@ export default async function SupportInboxPage({
         <div>
           <h1 className="heading-rule font-display text-2xl text-ink">Support Inbox</h1>
           <p className="mt-2 text-sm text-ink-soft">
-            Customer conversations with the Salon Manager.
+            Member conversations with the Sisters Lounge team.
           </p>
         </div>
         <ButtonLink href="/admin/support/replies" variant="outline">Saved replies</ButtonLink>

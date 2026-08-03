@@ -186,13 +186,13 @@ export function BookingWizard(props: Props) {
       (h) => h.salon_id === salonId && h.day_of_week === dow);
     if (bh && !bh.is_open) return "This salon is closed on this day.";
     if (!sub.availableDays.includes(dow))
-      return "Your plan does not include bookings on this day.";
+      return "Your membership does not include visits on this day.";
     const clash = intervalConflict(sub.liveVisitDates, date, sub.intervalDays);
     if (clash) {
-      return `Subscription visits must be at least ${sub.intervalDays} days apart — you already have a visit on ${clash}.`;
+      return `Visits must be at least ${sub.intervalDays} days apart — you already have a visit on ${clash}.`;
     }
     if (date >= sub.cycleEndsOn)
-      return "This date falls after your subscription cycle ends.";
+      return "This date falls after your membership cycle ends.";
     return null;
   }, [date, props.salonHours, salonId, sub]);
 
@@ -252,7 +252,7 @@ export function BookingWizard(props: Props) {
   return (
     <div className="grid gap-4 pb-24">
       {/* progress */}
-      <ol className="flex gap-1.5" aria-label="Booking steps">
+      <ol className="flex gap-1.5" aria-label="Reservation steps">
         {STEPS.map((label, i) => (
           <li
             key={label}
@@ -278,7 +278,7 @@ export function BookingWizard(props: Props) {
               <div className="flex items-center justify-between gap-2">
                 <p className="font-semibold">
                   {s.childName ? `${s.childName}` : "Myself"}
-                  <span className="text-ink-soft"> · {s.planName} plan</span>
+                  <span className="text-ink-soft"> · {s.planName} membership</span>
                 </p>
                 <Badge tone={s.remaining > 0 ? "green" : "red"}>
                   {s.remaining} visit{s.remaining !== 1 ? "s" : ""} left
@@ -289,7 +289,7 @@ export function BookingWizard(props: Props) {
           ))}
           {sub.remaining === 0 && (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              No visits remaining on this subscription this cycle. Unused visits
+              No visits remaining on this membership this cycle. Unused visits
               reset with your next cycle.
             </p>
           )}
@@ -408,7 +408,7 @@ export function BookingWizard(props: Props) {
               Enhance your visit
             </p>
             <p className="mt-1 text-sm text-white/85">
-              Add extra services to your appointment — each has an additional
+              Add extra services to your visit — each has an additional
               fee, payable per its terms.
             </p>
           </div>
@@ -456,7 +456,7 @@ export function BookingWizard(props: Props) {
           })}
           {eligibleExtras.length === 0 && (
             <p className="text-sm text-ink-soft">
-              No extra services are available for this booking.
+              No extra services are available for this visit.
             </p>
           )}
         </div>
@@ -466,7 +466,7 @@ export function BookingWizard(props: Props) {
       {step === 5 && service && time && (
         <div className="grid gap-4">
           <div className="rounded-2xl border border-line bg-white p-4">
-            <p className="font-display text-lg text-brand-900">Booking summary</p>
+            <p className="font-display text-lg text-brand-900">Visit summary</p>
             <dl className="mt-3 grid gap-2.5 text-sm">
               <div className="flex justify-between">
                 <dt className="text-ink-soft">For</dt>
@@ -489,7 +489,7 @@ export function BookingWizard(props: Props) {
               </div>
               <div className="my-1 border-t border-line" />
               <div className="flex justify-between">
-                <dt>Subscription visit — {service.name}</dt>
+                <dt>Membership visit — {service.name}</dt>
                 <dd className="font-bold text-emerald-700">Included</dd>
               </div>
               {selectedExtras.map((e) => (
@@ -505,7 +505,7 @@ export function BookingWizard(props: Props) {
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Estimated appointment duration</dt>
+                <dt className="text-ink-soft">Estimated visit duration</dt>
                 <dd className="font-semibold">{formatDuration(duration)}</dd>
               </div>
               <div className="flex justify-between">
@@ -535,8 +535,8 @@ export function BookingWizard(props: Props) {
             />
           </div>
           <p className="text-xs text-ink-soft">
-            Your stylist is assigned by the salon. This booking reserves one
-            subscription visit — the visit is only used after your appointment
+            Your stylist is assigned by the salon and revealed at check-in. This
+            reserves one membership visit — it is only used after your visit
             is completed.
           </p>
           {error && (
@@ -572,7 +572,7 @@ export function BookingWizard(props: Props) {
               disabled={pending}
               onClick={submit}
             >
-              {pending ? "Booking…" : "Confirm booking"}
+              {pending ? "Reserving…" : "Reserve Visit"}
             </button>
           )}
         </div>

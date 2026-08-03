@@ -79,7 +79,7 @@ export default async function FavouritesPage() {
                   <div>
                     <p className="font-semibold">{e.name}</p>
                     <p className="text-sm text-ink-soft">
-                      {formatNaira(e.price_kobo)} — add it during booking
+                      {formatNaira(e.price_kobo)} — add it when reserving a visit
                     </p>
                   </div>
                   <FavouriteButton itemType="extra_service" itemId={e.id} isFavourite />

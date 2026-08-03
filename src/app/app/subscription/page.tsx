@@ -17,7 +17,7 @@ import {
   RenewalOptOutToggle,
 } from "@/components/subscription-controls";
 
-export const metadata: Metadata = { title: "My Subscription" };
+export const metadata: Metadata = { title: "My Membership" };
 export const dynamic = "force-dynamic";
 
 export default async function SubscriptionPage({
@@ -35,12 +35,12 @@ export default async function SubscriptionPage({
   return (
     <div className="grid gap-5">
       <div>
-        <h1 className="heading-rule font-display text-2xl text-ink">My Subscription</h1>
+        <h1 className="heading-rule font-display text-2xl text-ink">My Membership</h1>
       </div>
 
       {selected && pendingSelection && (
         <Card className="border-emerald-200 bg-emerald-50">
-          <p className="font-semibold">Plan selection saved ✓</p>
+          <p className="font-semibold">Membership selection saved ✓</p>
           <p className="mt-1 text-sm text-ink-soft">
             Your {pendingSelection.plan.name} selection is stored on your
             account. Payment activation will be handled in the payments phase —
@@ -54,7 +54,7 @@ export default async function SubscriptionPage({
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-gold-600">
-                Pending plan selection
+                Pending membership selection
               </p>
               <p className="font-display text-xl text-brand-900">
                 {pendingSelection.plan.name}
@@ -66,7 +66,7 @@ export default async function SubscriptionPage({
             </div>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <ButtonLink href="/plans" variant="outline">Change plan</ButtonLink>
+            <ButtonLink href="/plans" variant="outline">Change membership</ButtonLink>
             <CancelSelectionButton selectionId={pendingSelection.id} />
           </div>
         </Card>
@@ -74,8 +74,8 @@ export default async function SubscriptionPage({
 
       {overviews.length === 0 && !pendingSelection && (
         <EmptyState
-          title="No subscription yet"
-          message="Choose a monthly plan to start booking consistent salon visits."
+          title="No membership yet"
+          message="Choose a membership to start reserving consistent salon visits."
           action={<ButtonLink href="/plans">Browse plans</ButtonLink>}
         />
       )}
@@ -85,7 +85,7 @@ export default async function SubscriptionPage({
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-gold-600">
-                {o.child ? `${o.child.full_name}'s plan` : "Your plan"}
+                {o.child ? `${o.child.full_name}'s membership` : "Your membership"}
               </p>
               <p className="font-display text-xl text-brand-900">{o.plan.name}</p>
               <p className="text-sm text-ink-soft">
@@ -121,7 +121,7 @@ export default async function SubscriptionPage({
             <>
               <div className="mt-3 flex flex-wrap gap-2">
                 <ButtonLink href={`/app/book?subscription=${o.subscription.id}`}>
-                  Book a visit
+                  Reserve a visit
                 </ButtonLink>
               </div>
               <div className="mt-4 border-t border-line pt-3">
@@ -132,7 +132,7 @@ export default async function SubscriptionPage({
                 <p className="mt-2 text-xs text-ink-soft">
                   An already-paid cycle cannot be cancelled or paused. Opting
                   out simply means you won&apos;t be renewed when this cycle ends.
-                  Plan changes take effect from your next cycle.
+                  Membership changes take effect from your next cycle.
                 </p>
               </div>
             </>

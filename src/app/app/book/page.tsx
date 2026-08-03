@@ -13,7 +13,7 @@ import { profileCompletion } from "@/lib/booking-rules";
 import { ButtonLink, Card, EmptyState } from "@/components/ui";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 
-export const metadata: Metadata = { title: "Book an Appointment" };
+export const metadata: Metadata = { title: "Reserve a Visit" };
 export const dynamic = "force-dynamic";
 
 export default async function BookPage({
@@ -33,11 +33,11 @@ export default async function BookPage({
   if (!completion.complete) {
     return (
       <div className="grid gap-5">
-        <h1 className="heading-rule font-display text-2xl text-ink">Book an Appointment</h1>
+        <h1 className="heading-rule font-display text-2xl text-ink">Reserve a Visit</h1>
         <Card className="border-gold-300 bg-gold-100/50">
           <p className="font-semibold">Complete your profile first</p>
           <p className="mt-1 text-sm text-ink-soft">
-            Before booking we need: {completion.missing.join(", ")}.
+            Before reserving we need: {completion.missing.join(", ")}.
           </p>
           <div className="mt-3">
             <ButtonLink href="/app/profile" variant="gold">Complete profile</ButtonLink>
@@ -67,11 +67,11 @@ export default async function BookPage({
   if (bookable.length === 0 || !scheduling) {
     return (
       <div className="grid gap-5">
-        <h1 className="heading-rule font-display text-2xl text-ink">Book an Appointment</h1>
+        <h1 className="heading-rule font-display text-2xl text-ink">Reserve a Visit</h1>
         <EmptyState
-          title="No active subscription"
-          message="Booking uses your subscription visits. Choose a plan first — payment activation arrives in the payments phase, and the salon can activate migrated subscriptions for you."
-          action={<ButtonLink href="/plans">Browse plans</ButtonLink>}
+          title="No active membership"
+          message="Reserving uses your membership visits. Choose a membership first — payment activation arrives in the payments phase, and the salon can activate migrated memberships for you."
+          action={<ButtonLink href="/plans">Browse memberships</ButtonLink>}
         />
       </div>
     );
@@ -86,7 +86,7 @@ export default async function BookPage({
 
   return (
     <div className="grid gap-5">
-      <h1 className="heading-rule font-display text-2xl text-ink">Book an Appointment</h1>
+      <h1 className="heading-rule font-display text-2xl text-ink">Reserve a Visit</h1>
       <BookingWizard
         subscriptions={bookable.map((o) => ({
           id: o.subscription.id,

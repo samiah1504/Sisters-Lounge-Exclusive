@@ -49,16 +49,6 @@ function ServiceFields({ s }: { s?: Record<string, unknown> }) {
       </Field>
       <div className="flex flex-wrap gap-4">
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="salon_available" className="h-5 w-5 accent-brand-600"
-            defaultChecked={(s?.salon_available as boolean) ?? true} />
-          Salon
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="home_available" className="h-5 w-5 accent-brand-600"
-            defaultChecked={(s?.home_available as boolean) ?? false} />
-          Home service
-        </label>
-        <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="is_active" className="h-5 w-5 accent-brand-600"
             defaultChecked={(s?.is_active as boolean) ?? true} />
           Active

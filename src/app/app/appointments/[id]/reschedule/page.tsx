@@ -37,7 +37,7 @@ export default async function ReschedulePage({
       </div>
       <Card className="bg-brand-50">
         <p className="text-sm text-ink-soft">
-          Your reserved visit moves with the appointment. The new time must be
+          Your reserved visit moves with you. The new time must be
           within your subscription cycle, at least{" "}
           {scheduling.minNoticeHours} hours from now, and keep the required gap
           between your subscription visits.

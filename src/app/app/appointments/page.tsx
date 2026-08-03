@@ -10,7 +10,7 @@ import {
   EmptyState,
 } from "@/components/ui";
 
-export const metadata: Metadata = { title: "My Appointments" };
+export const metadata: Metadata = { title: "My Visits" };
 export const dynamic = "force-dynamic";
 
 export default async function AppointmentsPage() {
@@ -50,7 +50,7 @@ export default async function AppointmentsPage() {
   return (
     <div className="grid gap-5">
       <div className="flex items-end justify-between">
-        <h1 className="heading-rule font-display text-2xl text-ink">My Appointments</h1>
+        <h1 className="heading-rule font-display text-2xl text-ink">My Visits</h1>
         <ButtonLink href="/app/book">Book</ButtonLink>
       </div>
 
@@ -60,7 +60,7 @@ export default async function AppointmentsPage() {
           <EmptyState
             title="Nothing booked yet"
             message="Book your next visit to keep your routine consistent."
-            action={<ButtonLink href="/app/book">Book an appointment</ButtonLink>}
+            action={<ButtonLink href="/app/book">Reserve a visit</ButtonLink>}
           />
         ) : (
           upcoming.map((a) => <Item key={a.id} a={a} />)

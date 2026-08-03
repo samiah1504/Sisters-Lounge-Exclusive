@@ -10,7 +10,7 @@ import {
   Card,
 } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Appointment" };
+export const metadata: Metadata = { title: "Visit" };
 export const dynamic = "force-dynamic";
 
 export default async function AppointmentDetailPage({
@@ -39,10 +39,10 @@ export default async function AppointmentDetailPage({
     <div className="grid gap-4">
       {booked && (
         <Card className="border-emerald-200 bg-emerald-50">
-          <p className="font-semibold">Booking confirmed ✓</p>
+          <p className="font-semibold">Visit reserved ✓</p>
           <p className="mt-1 text-sm text-ink-soft">
-            One subscription visit has been reserved. It is only used once your
-            appointment is completed.
+            One membership visit has been reserved. It is only used once your
+            visit is completed.
             {appt.status === "pending_addon_payment" &&
               " Your add-ons need payment before final confirmation — online payment opens in the payments phase."}
           </p>
@@ -50,7 +50,7 @@ export default async function AppointmentDetailPage({
       )}
       {rescheduled && (
         <Card className="border-emerald-200 bg-emerald-50">
-          <p className="font-semibold">Appointment rescheduled ✓</p>
+          <p className="font-semibold">Visit rescheduled ✓</p>
           <p className="mt-1 text-sm text-ink-soft">
             Your visit reservation moved with the new time.
           </p>
@@ -73,7 +73,21 @@ export default async function AppointmentDetailPage({
           <div className="flex justify-between">
             <dt className="text-ink-soft">Salon</dt>
             <dd className="text-right font-semibold">
-              {appt.salon ? `${appt.salon.name}, ${appt.salon.city}` : "Sisters Lounge Salon"}
+              {appt.salon ? (
+                <>
+                  {appt.salon.name}, {appt.salon.city}
+                  <a
+                    className="ml-2 font-semibold text-brand-600 hover:underline"
+                    href={`https://maps.google.com/?q=${encodeURIComponent(`${appt.salon.name}, ${appt.salon.address}`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Map
+                  </a>
+                </>
+              ) : (
+                "Sisters Lounge Salon"
+              )}
             </dd>
           </div>
           <div className="flex justify-between">
@@ -90,7 +104,7 @@ export default async function AppointmentDetailPage({
           </div>
           <div className="my-1 border-t border-line" />
           <div className="flex justify-between">
-            <dt>Subscription visit — {appt.service.name}</dt>
+            <dt>Membership visit — {appt.service.name}</dt>
             <dd className="font-bold text-emerald-700">Included</dd>
           </div>
           {appt.extras.map((e, i) => (
@@ -110,7 +124,7 @@ export default async function AppointmentDetailPage({
           {appt.status === "pending_addon_payment" && (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-800">
               Add-on payment pending — required before the salon confirms this
-              booking. Online payment arrives in the payments phase.
+              visit. Online payment arrives in the payments phase.
             </p>
           )}
         </dl>
@@ -125,13 +139,13 @@ export default async function AppointmentDetailPage({
 
       {appt.status === "missed" && (
         <Card className="border-amber-200 bg-amber-50">
-          <p className="font-semibold">This appointment was missed</p>
+          <p className="font-semibold">This visit was missed</p>
           <p className="mt-1 text-sm text-ink-soft">
             Your visit was not used — it returned to your balance while your
             cycle is active. Choose another date that works for you.
           </p>
           <div className="mt-3">
-            <ButtonLink href="/app/book">Rebook a visit</ButtonLink>
+            <ButtonLink href="/app/book">Reserve another visit</ButtonLink>
           </div>
         </Card>
       )}
@@ -140,11 +154,11 @@ export default async function AppointmentDetailPage({
         <Card className="border-emerald-200 bg-emerald-50">
           <p className="font-semibold">Visit completed ✓</p>
           <p className="mt-1 text-sm text-ink-soft">
-            This visit has been used from your subscription. Keep the routine
-            going — book your next one.
+            This visit has been used from your membership. Keep the routine
+            going — reserve your next one.
           </p>
           <div className="mt-3">
-            <ButtonLink href="/app/book" variant="outline">Book next visit</ButtonLink>
+            <ButtonLink href="/app/book" variant="outline">Reserve next visit</ButtonLink>
           </div>
         </Card>
       )}
@@ -152,7 +166,7 @@ export default async function AppointmentDetailPage({
       {reschedulable && (
         <div className="grid gap-2">
           <ButtonLink href={`/app/appointments/${appt.id}/reschedule`} variant="outline">
-            Reschedule this appointment
+            Reschedule this visit
           </ButtonLink>
           <p className="text-center text-xs text-ink-soft">
             Need to cancel instead? Rescheduling keeps your reserved visit —

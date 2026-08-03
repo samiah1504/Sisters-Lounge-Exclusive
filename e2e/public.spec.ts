@@ -8,9 +8,10 @@ import { expect, test } from "@playwright/test";
 test("homepage renders mobile-first with correct positioning", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: /healthy hair care, made consistent/i }),
+    page.getByRole("heading", { name: /members-only natural\s?hair\s?club/i }),
   ).toBeVisible();
-  await expect(page.getByText(/monthly hair-care membership/i)).toBeVisible();
+  await expect(page.getByText(/welcome to sisters lounge/i).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /become a member/i }).first()).toBeVisible();
 
   // No horizontal scrolling on mobile.
   const overflow = await page.evaluate(
@@ -25,8 +26,9 @@ test("homepage renders mobile-first with correct positioning", async ({ page }) 
 
 test("browse plans on mobile", async ({ page }) => {
   await page.goto("/plans");
-  await expect(page.getByRole("heading", { name: /subscription plans/i })).toBeVisible();
-  await expect(page.getByText(/visits must be at least seven days apart/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /membership plans/i })).toBeVisible();
+  await expect(page.getByText(/visits must be at least 7 days apart/i)).toBeVisible();
+  await expect(page.getByText(/no rollover/i)).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
@@ -35,16 +37,16 @@ test("browse plans on mobile", async ({ page }) => {
 
 test("compare plans page renders", async ({ page }) => {
   await page.goto("/plans/compare");
-  await expect(page.getByRole("heading", { name: /compare plans/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /compare memberships/i })).toBeVisible();
 });
 
 test("mobile menu opens and navigates", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /toggle menu/i }).click();
   await expect(
-    page.getByRole("link", { name: "Subscription Plans", exact: true }),
+    page.getByRole("link", { name: "Membership Plans", exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Login", exact: true }).click();
+  await page.locator("#site-menu").getByRole("link", { name: "Sign In", exact: true }).click();
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByLabel(/email address/i)).toBeVisible();
 });
@@ -57,4 +59,16 @@ test("customer area redirects anonymous users to login", async ({ page }) => {
 test("admin area redirects anonymous users to login", async ({ page }) => {
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/login/);
+});
+
+test("salons page lists open salons and captures waitlist interest", async ({ page }) => {
+  await page.goto("/salons");
+  await expect(page.getByRole("heading", { name: /sisters lounge salons/i })).toBeVisible();
+  await expect(page.getByText(/coming soon/i).first()).toBeVisible();
+  // Waitlist form is present for any city, without an account.
+  await expect(page.getByRole("heading", { name: /another city\?/i })).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(0);
 });

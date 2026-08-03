@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 
 const items = [
   { href: "/app", label: "Home", icon: "⌂", exact: true },
-  { href: "/app/book", label: "Book", icon: "✚", exact: false },
-  { href: "/app/appointments", label: "Visits", icon: "▤", exact: false },
+  { href: "/app/book", label: "Reserve", icon: "✚", exact: false },
+  { href: "/app/appointments", label: "My Visits", icon: "▤", exact: false },
   { href: "/app/products", label: "Shop", icon: "❖", exact: false },
   { href: "/app/profile", label: "Profile", icon: "◉", exact: false },
 ];

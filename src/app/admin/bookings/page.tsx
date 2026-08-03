@@ -6,7 +6,7 @@ import { formatDateTime, formatNaira } from "@/lib/format";
 import { AppointmentStatusBadge, Card, EmptyState } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
 
-export const metadata: Metadata = { title: "Bookings" };
+export const metadata: Metadata = { title: "Reserved Visits" };
 export const dynamic = "force-dynamic";
 
 const FILTERS = [
@@ -91,7 +91,7 @@ export default async function AdminBookingsPage({
 
   return (
     <div className="grid gap-4">
-      <h1 className="heading-rule font-display text-2xl text-ink">Bookings</h1>
+      <h1 className="heading-rule font-display text-2xl text-ink">Reserved Visits</h1>
 
       <form className="flex flex-wrap gap-2" action="/admin/bookings" method="get">
         <input type="hidden" name="filter" value={filter} />

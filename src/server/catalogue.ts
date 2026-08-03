@@ -131,3 +131,40 @@ export async function getPublicProducts(): Promise<Product[]> {
     return data;
   });
 }
+
+export interface PublicSalon {
+  id: string;
+  name: string;
+  slug: string;
+  city: string;
+  state: string;
+  address: string;
+  status: string;
+  phone: string | null;
+  whatsapp: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+/** Open + coming-soon salons for the public surface (v3 §3.3). */
+export async function getPublicSalons(): Promise<PublicSalon[]> {
+  return safeRows(async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("salons")
+      .select("id, name, slug, city, state, address, status, phone, whatsapp, latitude, longitude")
+      .in("status", ["open", "waitlist", "planned"])
+      .order("status")
+      .order("created_at");
+    return data;
+  });
+}
+
+export async function getPublicSalonHours() {
+  return safeRows(async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("salon_hours").select("*").order("day_of_week");
+    return data;
+  });
+}

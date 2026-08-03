@@ -32,7 +32,7 @@ export default async function SelectPlanPage({
     <div className="grid gap-5">
       <div>
         <h1 className="heading-rule font-display text-2xl text-ink">
-          Select the {plan.name} plan
+          Select the {plan.name} membership
         </h1>
         <p className="mt-2 text-sm text-ink-soft">
           Your selection is saved to your account. Payment activation will be
@@ -58,7 +58,7 @@ export default async function SelectPlanPage({
       {existing && (
         <Card className="border-amber-200 bg-amber-50">
           <p className="text-sm">
-            You already have a pending selection. Choosing a new plan will
+            You already have a pending selection. Choosing a new membership will
             replace it.
           </p>
         </Card>

@@ -37,7 +37,7 @@ export default async function CustomerConversationPage({
     id: m.id,
     sender_type: m.sender_type,
     sender_name: m.sender_type === "staff"
-      ? "Salon Manager"
+      ? "Sisters Lounge"
       : (m.sender as { full_name: string })?.full_name ?? "You",
     body: m.body,
     is_internal_note: m.is_internal_note,

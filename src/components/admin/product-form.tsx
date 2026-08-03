@@ -54,7 +54,7 @@ export function ProductForm({
           <input id="price_naira" name="price_naira" type="number" min={0} step="0.01" required
             defaultValue={product ? product.price_kobo / 100 : ""} className={inputClass} />
         </Field>
-        <Field label="Subscriber price (₦, optional)" htmlFor="subscriber_price_naira">
+        <Field label="Member price (₦, optional)" htmlFor="subscriber_price_naira">
           <input id="subscriber_price_naira" name="subscriber_price_naira" type="number" min={0} step="0.01"
             defaultValue={product?.subscriber_price_kobo != null ? product.subscriber_price_kobo / 100 : ""}
             className={inputClass} />

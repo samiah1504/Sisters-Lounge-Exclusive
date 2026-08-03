@@ -26,7 +26,7 @@ test("customer dashboard shows plan, visits and retention prompt", async ({ page
   await signIn(page, "fatima@customer.test");
   await expect(page.getByText(/basic/i).first()).toBeVisible();
   // Fatima has booked nothing → re-engagement prompt.
-  await expect(page.getByText(/no visit booked yet/i)).toBeVisible();
+  await expect(page.getByText(/no visit reserved yet/i)).toBeVisible();
 });
 
 test("add a child", async ({ page }) => {
@@ -39,14 +39,14 @@ test("add a child", async ({ page }) => {
   await expect(page.getByText("Test Child E2E")).toBeVisible();
 });
 
-test("book a valid appointment with add-ons, then invalid second booking fails", async ({ page }) => {
+test("reserve a valid visit with add-ons, then invalid second reservation fails", async ({ page }) => {
   await signIn(page, "fatima@customer.test");
   await page.goto("/app/book");
 
   // Step 1: subscription preselected → continue
   await page.getByRole("button", { name: /continue/i }).click();
-  // Step 2: salon location
-  await page.getByRole("button", { name: /salon visit/i }).click();
+  // Step 2: salon (defaults to home salon; confirm it)
+  await page.getByRole("button", { name: /sisters lounge salon/i }).first().click();
   await page.getByRole("button", { name: /continue/i }).click();
   // Step 3: service
   await page.getByRole("button", { name: /wash & deep condition/i }).click();
@@ -64,14 +64,14 @@ test("book a valid appointment with add-ons, then invalid second booking fails",
   // Step 6: review shows included visit + add-on price, then submit
   await expect(page.getByText(/included/i).first()).toBeVisible();
   await expect(page.getByText(/₦5,000/)).toBeVisible();
-  await page.getByRole("button", { name: /confirm booking/i }).click();
+  await page.getByRole("button", { name: /reserve visit/i }).click();
   await page.waitForURL(/\/app\/appointments\//);
-  await expect(page.getByText(/booking confirmed/i)).toBeVisible();
+  await expect(page.getByText(/visit reserved/i).first()).toBeVisible();
 
   // Second booking a few days later must violate the 7-day rule.
   await page.goto("/app/book");
   await page.getByRole("button", { name: /continue/i }).click();
-  await page.getByRole("button", { name: /salon visit/i }).click();
+  await page.getByRole("button", { name: /sisters lounge salon/i }).first().click();
   await page.getByRole("button", { name: /continue/i }).click();
   await page.getByRole("button", { name: /wash & deep condition/i }).click();
   await page.getByRole("button", { name: /continue/i }).click();

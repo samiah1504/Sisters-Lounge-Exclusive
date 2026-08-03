@@ -7,7 +7,7 @@ import { formatDateTime } from "@/lib/format";
 import { AppointmentStatusBadge, Card, EmptyState } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
 
-export const metadata: Metadata = { title: "My Bookings (Staff)" };
+export const metadata: Metadata = { title: "Reserved Visits (Staff)" };
 export const dynamic = "force-dynamic";
 
 export default async function StaffBookingsPage() {
@@ -72,7 +72,7 @@ export default async function StaffBookingsPage() {
           )}
         </section>
         <section className="grid gap-2.5">
-          <h2 className="font-semibold text-ink-soft">Unassigned bookings</h2>
+          <h2 className="font-semibold text-ink-soft">Unassigned visits</h2>
           {unassigned.length === 0 ? (
             <p className="text-sm text-ink-soft">All bookings are assigned.</p>
           ) : (

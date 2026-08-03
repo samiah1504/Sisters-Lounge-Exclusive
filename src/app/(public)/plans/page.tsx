@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPublicCategories, getPublicPlans } from "@/server/catalogue";
+import { getPublicCategories, getPublicPlans, getPublicSalons } from "@/server/catalogue";
 import { formatNaira } from "@/lib/format";
 import { Badge, ButtonLink, Card, EmptyState } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Subscription Plans" };
+export const metadata: Metadata = { title: "Membership Plans" };
 export const dynamic = "force-dynamic";
 
 export default async function PlansPage({
@@ -13,10 +13,13 @@ export default async function PlansPage({
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const [categories, plans] = await Promise.all([
+  const [categories, plans, salons] = await Promise.all([
     getPublicCategories(),
     getPublicPlans(),
+    getPublicSalons(),
   ]);
+  const openCities = [...new Set(
+    salons.filter((s) => s.status === "open").map((s) => s.city))].sort();
 
   const activeCategory = categories.find((c) => c.slug === category) ?? null;
   const visible = activeCategory
@@ -26,12 +29,37 @@ export default async function PlansPage({
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <h1 className="heading-rule font-display text-3xl text-ink">
-        Subscription Plans
+        Membership Plans
       </h1>
       <p className="mt-3 max-w-xl text-ink-soft">
-        Every plan runs for one monthly cycle. Visits must be at least seven
-        days apart, and unused visits expire at cycle end.
+        One membership, one national price, valid at every Sisters Lounge
+        Salon. Every membership runs for one monthly cycle.
       </p>
+
+      {/* v3 §3.3 — the five plain-language rules, above every join button */}
+      <div className="mt-5 rounded-2xl border border-gold-300/70 bg-gold-100/40 p-4">
+        <p className="text-sm font-bold uppercase tracking-wide text-gold-700">
+          How membership works
+        </p>
+        <ul className="mt-2 grid gap-1.5 text-sm text-ink">
+          <li>✦ Each membership includes a set number of visits per month.</li>
+          <li>✦ Unused visits expire at the end of the month — no rollover.</li>
+          <li>✦ Visits must be at least 7 days apart.</li>
+          <li>
+            ✦ Membership cannot be cancelled or refunded mid-cycle; renewal
+            can be switched off any time.
+          </li>
+          <li>✦ Valid at every Sisters Lounge Salon.</li>
+        </ul>
+        {openCities.length > 0 && (
+          <p className="mt-2 text-sm text-ink-soft">
+            Currently open: {openCities.join(", ")} ·{" "}
+            <Link href="/salons" className="font-semibold text-brand-600 hover:underline">
+              see all salons &amp; waitlists
+            </Link>
+          </p>
+        )}
+      </div>
 
       {/* category filter */}
       <div className="scrollbar-none -mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -63,7 +91,7 @@ export default async function PlansPage({
               <h2 className="font-display text-xl text-brand-700">{plan.name}</h2>
               <div className="flex gap-1.5">
                 {plan.is_featured && <Badge tone="gold">Popular</Badge>}
-                {plan.status === "closed" && <Badge tone="gray">Closed to new subscribers</Badge>}
+                {plan.status === "closed" && <Badge tone="gray">Closed to new members</Badge>}
               </div>
             </div>
             <p className="mt-1 text-sm text-ink-soft">{plan.short_description}</p>

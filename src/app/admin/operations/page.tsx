@@ -158,7 +158,7 @@ export default async function OperationsDashboardPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Section title="Subscription health" href="/admin/retention" linkLabel="Retention">
           <div className="grid grid-cols-3 gap-3">
-            <Stat value={active.length} label="Active subscribers" />
+            <Stat value={active.length} label="Active members" />
             <Stat value={expiringSoon + renewalDue} label="Expiring / renewal due"
               tone={expiringSoon + renewalDue > 0 ? "amber" : undefined} />
             <Stat value={pendingSelections ?? 0} label="Pending plan selections" />

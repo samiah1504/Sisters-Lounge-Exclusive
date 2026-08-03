@@ -8,13 +8,13 @@ export const metadata: Metadata = { title: "New Conversation" };
 
 const TOPICS = [
   ["subscription", "My subscription"],
-  ["booking", "A booking or appointment"],
+  ["booking", "A reserved visit"],
   ["extra_services", "Extra services"],
   ["products", "Products"],
   ["consultation", "Consultations"],
   ["payment", "Payment"],
   ["child_subscription", "My child's subscription"],
-  ["home_service", "Home service"],
+  ["home_service", "Salon locations"],
   ["complaint", "A complaint"],
   ["feedback", "Feedback"],
   ["general", "Something else"],
@@ -29,7 +29,7 @@ export default async function NewConversationPage() {
           Start a Conversation
         </h1>
         <p className="mt-2 text-sm text-ink-soft">
-          Tell us what you need help with — your Salon Manager will reply
+          Tell us what you need help with — the Sisters Lounge team will reply
           during salon hours.
         </p>
       </div>

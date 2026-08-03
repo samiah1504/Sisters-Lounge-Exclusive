@@ -18,7 +18,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const plan = await getPlanBySlug(slug);
-  return { title: plan ? `${plan.name} Plan` : "Plan" };
+  return { title: plan ? `${plan.name} Membership` : "Membership" };
 }
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -47,7 +47,7 @@ export default async function PlanDetailPage({
       <div className="flex flex-wrap items-center gap-2">
         {category && <Badge>{category.name}</Badge>}
         {plan.tier_label && <Badge tone="gold">{plan.tier_label}</Badge>}
-        {closed && <Badge tone="gray">Closed to new subscribers</Badge>}
+        {closed && <Badge tone="gray">Closed to new members</Badge>}
       </div>
       <h1 className="mt-3 font-display text-3xl text-brand-900">{plan.name}</h1>
       <p className="mt-2 text-ink-soft">
@@ -111,13 +111,14 @@ export default async function PlanDetailPage({
       <section className="mt-6">
         <h2 className="heading-rule font-display text-xl">Important terms</h2>
         <ul className="mt-3 grid gap-1.5 rounded-xl border border-line bg-white p-4 text-sm text-ink-soft">
-          <li>• Every subscription lasts one monthly cycle.</li>
+          <li>• Every membership lasts one monthly cycle.</li>
           <li>• Unused visits expire at the end of the cycle and cannot roll over.</li>
-          <li>• An already-paid active cycle cannot be cancelled, and subscriptions cannot be paused.</li>
+          <li>• An already-paid active cycle cannot be cancelled or refunded, and memberships cannot be paused.</li>
           <li>• You can opt out of the next renewal at any time.</li>
-          <li>• Plan changes take effect from your next cycle.</li>
-          <li>• Missed appointments do not automatically consume a visit.</li>
-          <li>• Stylists are assigned by the salon.</li>
+          <li>• Membership changes take effect from your next cycle.</li>
+          <li>• Missed visits do not automatically consume a visit.</li>
+          <li>• Stylists are assigned by the salon and revealed at check-in.</li>
+          <li>• Your membership is valid at every Sisters Lounge Salon.</li>
           {plan.terms && <li>• {plan.terms}</li>}
         </ul>
       </section>
@@ -125,7 +126,7 @@ export default async function PlanDetailPage({
       <div className="sticky bottom-4 mt-8 rounded-2xl border border-line bg-white p-3 shadow-card">
         {closed ? (
           <p className="px-2 py-1.5 text-center text-sm text-ink-soft">
-            This plan is currently closed to new subscribers.
+            This membership is currently closed to new members.
           </p>
         ) : session?.profile.role === "customer" ? (
           <ButtonLink href={`/app/plans/select/${plan.slug}`} className="w-full">
@@ -133,7 +134,7 @@ export default async function PlanDetailPage({
           </ButtonLink>
         ) : (
           <ButtonLink href={`/register`} className="w-full">
-            Create an account to select this plan
+            Become a member to select this membership
           </ButtonLink>
         )}
         <p className="mt-2 text-center text-xs text-ink-soft">

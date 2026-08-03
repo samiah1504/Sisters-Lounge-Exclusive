@@ -78,7 +78,7 @@ export default async function DashboardPage() {
       {/* profile completion */}
       {!completion.complete && (
         <Card className="border-gold-300 bg-gold-100/50">
-          <p className="font-semibold text-ink">Complete your profile to book visits</p>
+          <p className="font-semibold text-ink">Complete your profile to reserve visits</p>
           <p className="mt-1 text-sm text-ink-soft">
             Missing: {completion.missing.join(", ")}.
           </p>
@@ -98,9 +98,9 @@ export default async function DashboardPage() {
         <Card className="border-amber-200 bg-amber-50">
           <p className="font-semibold">Add-on payment pending</p>
           <p className="mt-1 text-sm text-ink-soft">
-            An appointment includes add-ons that need payment before
+            A reserved visit includes add-ons that need payment before
             confirmation. Online payment opens in the payments phase — the
-            salon will confirm your booking in the meantime.
+            salon will confirm your visit in the meantime.
           </p>
         </Card>
       )}
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
       {/* subscriptions */}
       {activeOverviews.length === 0 ? (
         <Card>
-          <p className="font-display text-lg text-brand-900">No active plan yet</p>
+          <p className="font-display text-lg text-brand-900">No active membership yet</p>
           {pendingSelection ? (
             <>
               <p className="mt-1 text-sm text-ink-soft">
@@ -124,10 +124,10 @@ export default async function DashboardPage() {
           ) : (
             <>
               <p className="mt-1 text-sm text-ink-soft">
-                Choose a monthly plan to start booking consistent salon visits.
+                Choose a membership to start reserving consistent salon visits.
               </p>
               <div className="mt-3">
-                <ButtonLink href="/plans">View Plans</ButtonLink>
+                <ButtonLink href="/plans">View Memberships</ButtonLink>
               </div>
             </>
           )}
@@ -138,7 +138,7 @@ export default async function DashboardPage() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gold-600">
-                  {o.child ? `${o.child.full_name}'s plan` : "Your plan"}
+                  {o.child ? `${o.child.full_name}'s membership` : "Your membership"}
                 </p>
                 <p className="font-display text-xl text-brand-900">{o.plan.name}</p>
               </div>
@@ -184,7 +184,7 @@ export default async function DashboardPage() {
                 href={`/app/book?subscription=${o.subscription.id}`}
                 className="flex-1 sm:flex-none"
               >
-                Book Appointment
+                Reserve Visit
               </ButtonLink>
               <ButtonLink href="/app/subscription" variant="outline">
                 Manage
@@ -194,18 +194,23 @@ export default async function DashboardPage() {
         ))
       )}
 
-      {/* next appointment */}
+      {/* next reserved visit (v3 §6.1: salon, date, time) */}
       {nextAppointment && (
         <Card>
           <div className="flex items-start justify-between gap-2">
             <p className="text-[11px] font-bold uppercase tracking-widest text-gold-600">
-              Next appointment
+              Next reserved visit
             </p>
             <AppointmentStatusBadge status={nextAppointment.status} />
           </div>
           <p className="mt-1 font-display text-lg text-brand-900">
             {formatDateTime(nextAppointment.starts_at)}
           </p>
+          {nextAppointment.salon && (
+            <p className="text-sm font-semibold text-brand-700">
+              {nextAppointment.salon.name} · {nextAppointment.salon.city}
+            </p>
+          )}
           <p className="text-sm text-ink-soft">
             {nextAppointment.service.name}
             {nextAppointment.child ? ` · for ${nextAppointment.child.full_name}` : ""}
@@ -265,9 +270,9 @@ export default async function DashboardPage() {
         <Card className="border-brand-200 bg-brand-50/60 hover:border-brand-400">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="font-semibold text-brand-900">Chat with Your Salon Manager</p>
+              <p className="font-semibold text-brand-900">Chat with Us</p>
               <p className="mt-0.5 text-sm text-ink-soft">
-                Questions, complaints or special requests — message us any time.
+                Membership questions, haircare advice, visit help — message us any time.
               </p>
             </div>
             {unreadSupport > 0 ? (
@@ -283,8 +288,8 @@ export default async function DashboardPage() {
 
       {/* quick actions */}
       <div className="grid grid-cols-2 gap-3">
-        <ButtonLink href="/plans" variant="outline">View Plans</ButtonLink>
-        <ButtonLink href="/app/consultations" variant="outline">Book Consultation</ButtonLink>
+        <ButtonLink href="/plans" variant="outline">View Memberships</ButtonLink>
+        <ButtonLink href="/app/consultations" variant="outline">Expert Consultations</ButtonLink>
         <ButtonLink href="/app/products" variant="outline">Browse Products</ButtonLink>
         <ButtonLink href="/app/favourites" variant="outline">My Favourites</ButtonLink>
       </div>

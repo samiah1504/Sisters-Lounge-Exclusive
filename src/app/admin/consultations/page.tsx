@@ -6,7 +6,7 @@ import { formatDateTime, formatNaira } from "@/lib/format";
 import { Badge, Card, EmptyState } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
 
-export const metadata: Metadata = { title: "Consultations" };
+export const metadata: Metadata = { title: "Expert Consultations" };
 export const dynamic = "force-dynamic";
 
 const TONES = {
@@ -32,7 +32,7 @@ export default async function AdminConsultationsPage() {
 
   return (
     <div className="grid gap-4">
-      <h1 className="heading-rule font-display text-2xl text-ink">Consultations</h1>
+      <h1 className="heading-rule font-display text-2xl text-ink">Expert Consultations</h1>
 
       <section className="grid gap-2.5">
         <h2 className="font-semibold text-ink-soft">Booking requests</h2>

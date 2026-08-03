@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDateTime, formatDuration, formatNaira } from "@/lib/format";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Consultations" };
+export const metadata: Metadata = { title: "Expert Consultations" };
 export const dynamic = "force-dynamic";
 
 export default async function ConsultationsPage({
@@ -35,10 +35,10 @@ export default async function ConsultationsPage({
   return (
     <div className="grid gap-5">
       <div>
-        <h1 className="heading-rule font-display text-2xl text-ink">Consultations</h1>
+        <h1 className="heading-rule font-display text-2xl text-ink">Expert Consultations</h1>
         <p className="mt-2 text-sm text-ink-soft">
-          One-on-one professional guidance. Consultations are charged
-          separately from your subscription.
+          One-on-one professional guidance. Expert Consultations are charged
+          separately from your membership.
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export default async function ConsultationsPage({
         <Card className="border-emerald-200 bg-emerald-50">
           <p className="font-semibold">Consultation request submitted ✓</p>
           <p className="mt-1 text-sm text-ink-soft">
-            Where payment applies, your booking stays pending until payment —
+            Where payment applies, your session stays pending until payment —
             online payment opens in the payments phase. The salon will reach
             out to confirm.
           </p>
@@ -93,12 +93,12 @@ export default async function ConsultationsPage({
               <p className="mt-2 text-sm">
                 <span className="font-bold text-brand-700">{formatNaira(price)}</span>
                 {isSubscriber && t.subscriber_discount_kobo > 0 && (
-                  <span className="ml-1 text-emerald-700">subscriber price</span>
+                  <span className="ml-1 text-emerald-700">member price</span>
                 )}
                 <span className="text-ink-soft"> · {formatDuration(t.duration_minutes)}</span>
               </p>
               {blocked ? (
-                <p className="mt-2 text-sm text-amber-700">Available to active subscribers only.</p>
+                <p className="mt-2 text-sm text-amber-700">Available to active members only.</p>
               ) : (
                 <div className="mt-3">
                   <ButtonLink href={`/app/consultations/${t.slug}/book`} variant="outline">

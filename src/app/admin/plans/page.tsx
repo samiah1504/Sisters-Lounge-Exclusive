@@ -10,7 +10,7 @@ import {
 import { formatNaira } from "@/lib/format";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Plans" };
+export const metadata: Metadata = { title: "Membership Plans" };
 export const dynamic = "force-dynamic";
 
 const STATUS_TONES = {
@@ -28,7 +28,7 @@ export default async function AdminPlansPage() {
   return (
     <div className="grid gap-4">
       <div className="flex items-end justify-between gap-3">
-        <h1 className="heading-rule font-display text-2xl text-ink">Plans</h1>
+        <h1 className="heading-rule font-display text-2xl text-ink">Membership Plans</h1>
         <ButtonLink href="/admin/plans/new">Create plan</ButtonLink>
       </div>
 
@@ -47,7 +47,7 @@ export default async function AdminPlansPage() {
                   </p>
                   <p className="text-sm text-ink-soft">
                     {formatNaira(p.monthly_price_kobo)}/month · {p.visits_included} visits ·
-                    interval {p.min_visit_interval_days}d · {subscriberCount} subscription
+                    interval {p.min_visit_interval_days}d · {subscriberCount} membership
                     {subscriberCount !== 1 ? "s" : ""}
                   </p>
                 </div>
@@ -74,7 +74,7 @@ export default async function AdminPlansPage() {
                     </form>
                     <form action={setPlanStatus.bind(null, p.id, "closed")}>
                       <button className="font-semibold text-amber-700 hover:underline">
-                        Close to new subscribers
+                        Close to new members
                       </button>
                     </form>
                   </>
@@ -105,7 +105,7 @@ export default async function AdminPlansPage() {
               {p.status === "archived" && subscriberCount > 0 && (
                 <p className="mt-2 text-xs text-amber-700">
                   Archived with existing subscriptions — history is preserved;
-                  existing subscribers keep their plan-version snapshot.
+                  existing members keep their plan-version snapshot.
                 </p>
               )}
             </Card>

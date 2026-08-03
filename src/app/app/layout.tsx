@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireCustomer } from "@/server/auth";
 import { BottomNav } from "@/components/bottom-nav";
+import { Onboarding } from "@/components/onboarding";
 import { signOut } from "@/server/actions/auth";
 
 export default async function CustomerLayout({
@@ -21,11 +22,11 @@ export default async function CustomerLayout({
           </Link>
           <div className="hidden items-center gap-4 text-sm lg:flex">
             <Link href="/app" className="text-ink-soft hover:text-brand-600">Dashboard</Link>
-            <Link href="/app/book" className="text-ink-soft hover:text-brand-600">Book</Link>
-            <Link href="/app/appointments" className="text-ink-soft hover:text-brand-600">Appointments</Link>
-            <Link href="/app/children" className="text-ink-soft hover:text-brand-600">Children</Link>
-            <Link href="/app/products" className="text-ink-soft hover:text-brand-600">Products</Link>
-            <Link href="/app/support" className="text-ink-soft hover:text-brand-600">Support</Link>
+            <Link href="/app/book" className="text-ink-soft hover:text-brand-600">Reserve Visit</Link>
+            <Link href="/app/appointments" className="text-ink-soft hover:text-brand-600">My Visits</Link>
+            <Link href="/app/children" className="text-ink-soft hover:text-brand-600">My Children</Link>
+            <Link href="/app/products" className="text-ink-soft hover:text-brand-600">Shop</Link>
+            <Link href="/app/support" className="text-ink-soft hover:text-brand-600">Chat with Us</Link>
             <Link href="/app/profile" className="text-ink-soft hover:text-brand-600">Profile</Link>
           </div>
           <form action={signOut}>
@@ -39,6 +40,7 @@ export default async function CustomerLayout({
         {children}
       </main>
       <BottomNav />
+      <Onboarding />
     </div>
   );
 }

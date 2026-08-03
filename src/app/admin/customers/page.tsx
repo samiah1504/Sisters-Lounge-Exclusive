@@ -5,7 +5,7 @@ import { requireStaffOrAdmin } from "@/server/auth";
 import { Badge, Card, EmptyState } from "@/components/ui";
 import type { Row } from "@/lib/db-rows";
 
-export const metadata: Metadata = { title: "Customers" };
+export const metadata: Metadata = { title: "Members" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminCustomersPage({
@@ -55,7 +55,7 @@ export default async function AdminCustomersPage({
 
   return (
     <div className="grid gap-4">
-      <h1 className="heading-rule font-display text-2xl text-ink">Customers</h1>
+      <h1 className="heading-rule font-display text-2xl text-ink">Members</h1>
 
       <form className="flex gap-2" action="/admin/customers" method="get">
         <input

@@ -31,29 +31,29 @@ const NAV: NavGroup[] = [
     items: [{ label: "Dashboard", icon: LayoutDashboard, href: "/admin" }],
   },
   {
-    label: "Customers",
+    label: "Members",
     items: [
-      { label: "Customers", icon: UserRound, href: "/admin/customers" },
+      { label: "Members", icon: UserRound, href: "/admin/customers" },
       { label: "Child Profiles", icon: Baby },
-      { label: "Subscribers", icon: ListChecks, href: "/admin/customers?filter=active-sub", canonical: false },
+      { label: "Active Members", icon: ListChecks, href: "/admin/customers?filter=active-sub", canonical: false },
       { label: "Retention", icon: HeartHandshake, href: "/admin/retention" },
     ],
   },
   {
-    label: "Appointments",
+    label: "Visits",
     items: [
-      { label: "Bookings", icon: CalendarDays, href: "/admin/bookings" },
+      { label: "Reserved Visits", icon: CalendarDays, href: "/admin/bookings" },
       { label: "Calendar", icon: CalendarClock },
       { label: "Scheduling Settings", icon: Settings2, href: "/admin/settings" },
       { label: "Blackout Dates", icon: CalendarX2, href: "/admin/settings#blackout-dates", canonical: false },
     ],
   },
   {
-    label: "Subscriptions",
+    label: "Memberships",
     items: [
-      { label: "Plans", icon: Crown, href: "/admin/plans" },
+      { label: "Membership Plans", icon: Crown, href: "/admin/plans" },
       { label: "Categories", icon: Layers, href: "/admin/categories" },
-      { label: "Active Subscriptions", icon: ListChecks, href: "/admin/customers?filter=active-sub", canonical: false },
+      { label: "Active Memberships", icon: ListChecks, href: "/admin/customers?filter=active-sub", canonical: false },
       { label: "Pending Selections", icon: Hourglass, href: "/admin/retention?view=pending-selection", canonical: false },
     ],
   },
@@ -62,7 +62,7 @@ const NAV: NavGroup[] = [
     items: [
       { label: "Salon Services", icon: Scissors, href: "/admin/services" },
       { label: "Extra Services", icon: Sparkles, href: "/admin/extra-services" },
-      { label: "Consultations", icon: MessageSquareHeart, href: "/admin/consultations" },
+      { label: "Expert Consultations", icon: MessageSquareHeart, href: "/admin/consultations" },
     ],
   },
   {
