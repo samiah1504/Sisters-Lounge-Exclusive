@@ -297,3 +297,64 @@ describe("salon-scoped RLS matrix (v3 §4.6, §10)", () => {
     expect(forIlorin.length).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe("salon lifecycle admin (v3 §7.3, C1)", () => {
+  const LAGOS = "77770001-0000-0000-0000-000000000003";
+
+  it("launching a planned salon opens it with hours and settings", async () => {
+    await db.query(
+      `insert into salons (id, name, slug, city, state, status)
+       values ($1, 'Sisters Lounge Salon Lagos', 'lagos-test', 'Lagos', 'Lagos', 'planned')
+       on conflict (id) do nothing`, [LAGOS]);
+    await runAs(ADMIN, (q) => q("select fn_launch_salon($1)", [LAGOS]));
+    const s = await db.query("select status, launch_date from salons where id = $1", [LAGOS]);
+    expect(s.rows[0].status).toBe("open");
+    expect(s.rows[0].launch_date).not.toBeNull();
+    const hours = await db.query(
+      "select count(*)::int as n from salon_hours where salon_id = $1", [LAGOS]);
+    expect(hours.rows[0].n).toBe(7);
+    const settings = await db.query(
+      "select count(*)::int as n from salon_settings where salon_id = $1", [LAGOS]);
+    expect(settings.rows[0].n).toBe(1);
+  });
+
+  it("closing a salon releases future reservations and blocks new ones", async () => {
+    // Our member reserves at Lagos (interval-safe: far from her other visits).
+    const apptId = await runAs(MEMBER, async (q) => {
+      const r = await q(
+        "select fn_book_appointment($1, $2, $3::timestamptz, $4) as id",
+        [subId, SVC_WASH, at(nextOpenDate(16), "11:00"), LAGOS]);
+      return r.rows[0].id as string;
+    });
+
+    const released = await runAs(ADMIN, async (q) => {
+      const r = await q(
+        "select fn_close_salon($1, 'lease ended') as n", [LAGOS]);
+      return r.rows[0].n as number;
+    });
+    expect(released).toBeGreaterThanOrEqual(1);
+
+    const appt = await db.query(
+      "select status from appointments where id = $1", [apptId]);
+    expect(appt.rows[0].status).toBe("cancelled_salon");
+
+    // Closed salons accept no reservations and cannot be reopened via reopen.
+    await expect(
+      runAs(MEMBER, (q) =>
+        q("select fn_book_appointment($1, $2, $3::timestamptz, $4)",
+          [subId, SVC_WASH, at(nextOpenDate(16), "14:00"), LAGOS])),
+    ).rejects.toThrow(/SALON_UNAVAILABLE/);
+    await expect(
+      runAs(ADMIN, (q) => q("select fn_reopen_salon($1)", [LAGOS])),
+    ).rejects.toThrow(/STATE/);
+  });
+
+  it("close requires a reason; lifecycle actions are admin-only", async () => {
+    await expect(
+      runAs(ADMIN, (q) => q("select fn_close_salon($1, '')", [ABUJA])),
+    ).rejects.toThrow(/REASON_REQUIRED/);
+    await expect(
+      runAs(STYLIST, (q) => q("select fn_launch_salon($1)", [LAGOS])),
+    ).rejects.toThrow(/permission denied/);
+  });
+});

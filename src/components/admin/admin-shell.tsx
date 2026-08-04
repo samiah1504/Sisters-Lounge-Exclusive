@@ -9,8 +9,8 @@ import {
   HeartHandshake, Hourglass, Baby, LayoutDashboard, Layers, LifeBuoy,
   ListChecks, LogOut, Megaphone, Menu, MessageSquareHeart, MessagesSquare,
   PackageOpen, Plug, Receipt, Scissors, ScrollText, Settings2, ShieldCheck,
-  ShoppingBag, Sparkles, Tags, TrendingUp, Truck, UserCog, UserRound,
-  Users, Wand2, Wrench, X, Clock,
+  ShoppingBag, Sparkles, Store, Tags, TrendingUp, Truck, UserCog,
+  UserRound, Users, Wand2, Wrench, X, Clock,
 } from "lucide-react";
 
 interface NavItem {
@@ -78,6 +78,7 @@ const NAV: NavGroup[] = [
     label: "Operations",
     items: [
       { label: "Operations Dashboard", icon: Gauge, href: "/admin/operations" },
+      { label: "Salons", icon: Store, href: "/admin/salons" },
       { label: "Capacity", icon: Users, href: "/admin/capacity" },
       { label: "Inventory", icon: Boxes, href: "/admin/inventory" },
       { label: "Stock Counts", icon: ClipboardList, href: "/admin/inventory/counts", canonical: false },
