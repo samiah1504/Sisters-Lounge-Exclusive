@@ -49,6 +49,8 @@ Role changes are admin-only (enforced by a trigger on `profiles`, not just UI).
 | `support.assign` / `support.manage` | – | ✓ | assignment, saved replies, closing |
 | `capacity.view` / `capacity.manage` / `capacity.override` | – | ✓ | capacity page, settings, activation override |
 | `operations.dashboard.view` | – | ✓ | `/admin/operations` |
+| `salons.view` | ✓ | ✓ | salon details/settings |
+| `salons.manage` | – | ✓ | salon CRUD + lifecycle (launch/pause/reopen/close), hours, blackout dates, no-show policy |
 
 Staff grants live in `role_permissions` (seeded in `0001_foundation.sql`) and
 can be changed at runtime by admins without code changes.
@@ -67,3 +69,7 @@ can be changed at runtime by admins without code changes.
   their own messages as internal (trigger-forced off)
 - Post into a closed conversation or impersonate staff in chat
   (sender identity is trigger-enforced)
+- Reserve at a salon that is not open, hold two visits on one day, or
+  dodge the 7-day interval by switching salons
+- Erase their own no-show history or bypass an active reservation pause
+  (though the salon team can always reserve on their behalf)

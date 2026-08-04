@@ -8,6 +8,9 @@
 | `/plans` | Browse active public plans, filter by category |
 | `/plans/[slug]` | Plan detail: price, visits, included/excluded services, terms, select CTA |
 | `/plans/compare` | Side-by-side comparison table (`?category=` or `?plans=a,b,c`) |
+| `/salons` | Open salons + coming-soon cities with per-city waitlist capture |
+| `/about`, `/treatments`, `/faq`, `/contact` | Club content (v3 §3.3, §6.4) |
+| `/terms`, `/privacy`, `/refund-policy` | Plain-language policies |
 | `/login`, `/register` | Auth |
 
 ## Customer — `/app` (role: customer)
@@ -60,6 +63,9 @@
 | `/admin/expenses` (+`/recurring`, `/dashboard`, `/categories`) | Expense workflow (draft→approval→paid/void), recurring templates, spending dashboard, categories + threshold |
 | `/admin/support` (+`/[id]`, `/replies`) | Staff inbox with filters; thread with internal notes + saved replies |
 | `/admin/capacity` | Utilisation, warnings, per-plan limits, capacity settings |
+| `/admin/salons` (+`/new`, `/[id]`) | Salon CRUD, launch/pause/reopen/close, staff↔salon assignments, waitlist expansion dashboard, affected-members list |
+| `/admin/reports` | Memberships by home salon, visits by serving salon, cross-salon flow (v3 §7.4) |
+| `/admin/migration` | Member migration import: dry-run + idempotent activation (v3 §9) |
 
 ## Staff — `/staff` (role: staff or admin)
 

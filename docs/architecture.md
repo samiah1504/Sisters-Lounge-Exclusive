@@ -96,9 +96,9 @@ New codes must be added in both places.
 
 | Suite | Runs where | Proves |
 | ----- | ---------- | ------ |
-| `src/**/*.test.ts` (46) | anywhere | pure rules: interval, durations, eligibility, transitions, recommendations, stock levels, variance, capacity math |
-| `tests/integration` (64) | local Postgres 16 (`npm run db:reset`) | migrations apply; RLS isolation; booking/reservation/consumption; 7-day rule; stock ledger; expense workflow; chat privacy; capacity limits; audit |
-| `e2e/public.spec.ts` + `e2e/phase3.spec.ts` (7 public) | any dev server | mobile layout, no overflow, nav, auth redirects incl. operations pages |
+| `src/**/*.test.ts` (50) | anywhere | pure rules: interval, eligibility, transitions, stock, capacity math, at-risk guard, import parsing |
+| `tests/integration` (92) | local Postgres 16 (`npm run db:reset`) | all 28 migrations; RLS incl. the salon matrix; reservations, portability, cross-salon rules, salon lifecycle, consultation benefits, at-risk guard, no-show engine; ledger; expenses; chat privacy; capacity |
+| `e2e/*.spec.ts` (9 public) | any dev server | mobile layout, no overflow, welcome/onboarding copy, salons + waitlist, content pages, auth redirects |
 | `e2e/authenticated.spec.ts` + `e2e/phase3.spec.ts` (15) | live Supabase + seed (`E2E_SUPABASE=1`) | full customer/admin/operations flows |
 
 The integration harness impersonates users exactly like PostgREST does

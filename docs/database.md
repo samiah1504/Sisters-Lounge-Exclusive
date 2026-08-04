@@ -27,6 +27,16 @@ never hard-deleted.
 | `0016_support_chat.sql` | `support_conversations`, `support_messages` (truthful-sender + closed-conversation triggers, append-only), `support_saved_replies` |
 | `0017_capacity_permissions_rls.sql` | `subscription_capacity_settings`, `subscription_category_limits`, `capacity_overrides`, `fn_capacity_counts`, `fn_check_activation_capacity`, capacity-aware `fn_activate_manual_subscription`, 32 Phase 3 permissions + staff grants, RLS for every Phase 3 table |
 | `0018_product_stock_sync.sql` | triggers mirroring linked inventory availability into `products.stock_status` (customers never read inventory tables) |
+| `0019_salons.sql` | `salons`, `salon_hours`, `salon_blackout_dates`, `salon_settings`, `staff_salon_assignments`, `city_waitlist`; Ilorin created + seeded from the old globals |
+| `0020_salon_scoping.sql` | `salon_id` on appointments/schedules/ledger/expenses, `subscriptions.home_salon_id`, per-salon `salon_product_stock`; full backfill to Ilorin then NOT NULL |
+| `0021_home_service_removal.sql` | home service deleted outright (v3 §4.8); history keeps `was_home_visit`; guard aborts if live home visits exist |
+| `0022_salon_functions.sql` | reservation/availability/reschedule per salon, cross-salon rules (#37, #40), `fn_pause_salon`, per-salon stock ledger, capacity minus home dimension, activation records the home salon |
+| `0023_salon_rls.sql` | `jwt_salon_ids()` + custom access token hook, salon-scoped staff RLS, the visiting-member rule (§10) |
+| `0024_member_copy.sql` | retention prompt copy in members-club language (logic identical to 0010) |
+| `0025_salon_lifecycle.sql` | `fn_launch_salon`, `fn_reopen_salon`, `fn_close_salon` |
+| `0026_consultation_benefits.sql` | `plan_consultation_benefits`, `fn_my_consultation_prices`, `fn_consultation_price` |
+| `0027_reservation_guard.sql` | `appointments.entitlement_at_risk` computed at reservation (v3 §5.6, non-blocking) |
+| `0028_no_show.sql` | `no_show_policies` (brand + per-salon), `member_no_shows`, grace before "missed", warning prompts, self-service reservation pause (staff never blocked) |
 
 ## Status vocabularies
 
