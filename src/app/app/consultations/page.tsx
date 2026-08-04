@@ -16,21 +16,28 @@ export default async function ConsultationsPage({
   const { submitted } = await searchParams;
   const session = await requireCustomer();
   const supabase = await createClient();
-  const [types, { data: bookings }, { data: activeSub }] = await Promise.all([
-    getConsultationTypes(),
-    supabase
-      .from("consultation_bookings")
-      .select("*, consultation_type:consultation_types(name)")
-      .eq("customer_id", session.customerProfile.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("subscriptions")
-      .select("id")
-      .eq("customer_id", session.customerProfile.id)
-      .in("status", ["active", "expiring_soon", "renewal_due"])
-      .limit(1),
-  ]);
+  const [types, { data: bookings }, { data: activeSub }, { data: prices }] =
+    await Promise.all([
+      getConsultationTypes(),
+      supabase
+        .from("consultation_bookings")
+        .select("*, consultation_type:consultation_types(name)")
+        .eq("customer_id", session.customerProfile.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("customer_id", session.customerProfile.id)
+        .in("status", ["active", "expiring_soon", "renewal_due"])
+        .limit(1),
+      // v3 C2: membership pricing resolved by the database.
+      supabase.rpc("fn_my_consultation_prices"),
+    ]);
   const isSubscriber = (activeSub?.length ?? 0) > 0;
+  const priceOf = new Map(
+    ((prices ?? []) as Array<{ consultation_type_id: string; price_kobo: number; benefit: string }>)
+      .map((p) => [p.consultation_type_id, p]),
+  );
 
   return (
     <div className="grid gap-5">
@@ -76,10 +83,9 @@ export default async function ConsultationsPage({
 
       <div className="grid gap-3">
         {types.map((t) => {
-          const price = Math.max(
-            0,
-            t.price_kobo - (isSubscriber ? t.subscriber_discount_kobo : 0),
-          );
+          const resolved = priceOf.get(t.id);
+          const price = resolved?.price_kobo ?? t.price_kobo;
+          const benefit = resolved?.benefit ?? "standard";
           const blocked = t.subscriber_only && !isSubscriber;
           return (
             <Card key={t.id}>
@@ -91,9 +97,28 @@ export default async function ConsultationsPage({
               </div>
               <p className="mt-1 text-sm text-ink-soft">{t.short_description}</p>
               <p className="mt-2 text-sm">
-                <span className="font-bold text-brand-700">{formatNaira(price)}</span>
-                {isSubscriber && t.subscriber_discount_kobo > 0 && (
+                {benefit === "included" ? (
+                  <span className="font-bold text-emerald-700">
+                    Included with your membership
+                  </span>
+                ) : (
+                  <span className="font-bold text-brand-700">{formatNaira(price)}</span>
+                )}
+                {benefit === "discounted" && (
+                  <>
+                    <span className="ml-1.5 text-ink-soft line-through">
+                      {formatNaira(t.price_kobo)}
+                    </span>
+                    <span className="ml-1 text-emerald-700">member price</span>
+                  </>
+                )}
+                {benefit === "member" && (
                   <span className="ml-1 text-emerald-700">member price</span>
+                )}
+                {benefit === "included_used" && (
+                  <span className="ml-1 text-ink-soft">
+                    (this cycle&apos;s free session already used)
+                  </span>
                 )}
                 <span className="text-ink-soft"> · {formatDuration(t.duration_minutes)}</span>
               </p>

@@ -370,11 +370,18 @@ export async function bookConsultation(payload: {
     .limit(1);
   const isSubscriber = (activeSub?.length ?? 0) > 0;
   if (type.subscriber_only && !isSubscriber) {
-    return { error: "This consultation is for active subscribers only." };
+    return { error: "This consultation is for active members only." };
   }
-  const price = Math.max(
-    0,
-    type.price_kobo - (isSubscriber ? type.subscriber_discount_kobo : 0),
+  // v3 C2: the database resolves membership pricing (included / member
+  // price / standard) so the snapshot below is authoritative.
+  const { data: resolvedPrice, error: priceError } = await supabase.rpc(
+    "fn_consultation_price",
+    { p_type_id: type.id },
+  );
+  if (priceError) return { error: "Could not confirm the price — please try again." };
+  const price = Number(
+    resolvedPrice ??
+      Math.max(0, type.price_kobo - (isSubscriber ? type.subscriber_discount_kobo : 0)),
   );
 
   const { error } = await supabase.from("consultation_bookings").insert({

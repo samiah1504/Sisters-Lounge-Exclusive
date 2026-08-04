@@ -358,3 +358,68 @@ describe("salon lifecycle admin (v3 §7.3, C1)", () => {
     ).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("Expert Consultation membership benefits (v3 C2)", () => {
+  let typeId: string;
+
+  beforeAll(async () => {
+    const t = await db.query(
+      "select id, price_kobo from consultation_types where slug = 'general-hair'");
+    typeId = t.rows[0].id;
+  });
+
+  it("standard price applies without a benefit; member discount still works", async () => {
+    const rows = await runAs(MEMBER, async (q) =>
+      (await q("select * from fn_my_consultation_prices() where consultation_type_id = $1",
+        [typeId])).rows);
+    // Our member has an active membership; general-hair has no legacy discount.
+    expect(["standard", "member"]).toContain(rows[0].benefit);
+  });
+
+  it("an included benefit makes it free, capped per cycle", async () => {
+    await db.query(
+      `insert into plan_consultation_benefits
+         (plan_id, consultation_type_id, benefit_type, included_per_cycle)
+       values ($1, $2, 'included', 1)
+       on conflict (plan_id, consultation_type_id) do update
+         set benefit_type = 'included', included_per_cycle = 1, member_price_kobo = 0`,
+      [PREMIUM_PLAN, typeId]);
+
+    const before = await runAs(MEMBER, async (q) =>
+      (await q("select * from fn_my_consultation_prices() where consultation_type_id = $1",
+        [typeId])).rows);
+    expect(before[0].benefit).toBe("included");
+    expect(Number(before[0].price_kobo)).toBe(0);
+
+    // Use the free session…
+    await runAs(MEMBER, (q) =>
+      q(`insert into consultation_bookings
+           (customer_id, consultation_type_id, requested_at, status, price_kobo)
+         values ($1, $2, now() + interval '2 days', 'pending_confirmation', 0)`,
+        [customerId, typeId]));
+
+    // …and the quota is spent: back to a paid price for this cycle.
+    const after = await runAs(MEMBER, async (q) =>
+      (await q("select * from fn_my_consultation_prices() where consultation_type_id = $1",
+        [typeId])).rows);
+    expect(after[0].benefit).toBe("included_used");
+    expect(Number(after[0].price_kobo)).toBeGreaterThan(0);
+  });
+
+  it("a discounted benefit resolves to the member price", async () => {
+    await db.query(
+      `update plan_consultation_benefits
+         set benefit_type = 'discounted', member_price_kobo = 100000
+       where plan_id = $1 and consultation_type_id = $2`,
+      [PREMIUM_PLAN, typeId]);
+    const rows = await runAs(MEMBER, async (q) =>
+      (await q("select * from fn_my_consultation_prices() where consultation_type_id = $1",
+        [typeId])).rows);
+    expect(rows[0].benefit).toBe("discounted");
+    expect(Number(rows[0].price_kobo)).toBe(100000);
+    // fn_consultation_price matches (the booking snapshot source).
+    const price = await runAs(MEMBER, async (q) =>
+      (await q("select fn_consultation_price($1) as p", [typeId])).rows);
+    expect(Number(price[0].p)).toBe(100000);
+  });
+});

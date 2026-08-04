@@ -908,3 +908,46 @@ export async function deleteRecommendationRule(ruleId: string): Promise<void> {
   await supabase.from("recommendation_rules").delete().eq("id", ruleId);
   revalidatePath("/admin/recommendations");
 }
+
+/* ------------------------ Expert Consultation benefits (v3 C2) ----------- */
+
+export async function saveConsultationBenefit(
+  planId: string,
+  typeId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdmin();
+  const benefit = String(formData.get("benefit") ?? "standard");
+  const supabase = await createClient();
+
+  if (benefit === "standard") {
+    await supabase
+      .from("plan_consultation_benefits")
+      .delete()
+      .eq("plan_id", planId)
+      .eq("consultation_type_id", typeId);
+    revalidatePath(`/admin/plans/${planId}`);
+    return { success: "Benefit removed — standard pricing applies." };
+  }
+
+  const perCycle = Math.min(31, Math.max(1, Number(formData.get("included_per_cycle") ?? 1)));
+  const memberNaira = Math.max(0, Number(formData.get("member_price_naira") ?? 0));
+  if (benefit === "discounted" && memberNaira <= 0) {
+    return { error: "Enter the member price for a discounted benefit." };
+  }
+
+  const { error } = await supabase.from("plan_consultation_benefits").upsert(
+    {
+      plan_id: planId,
+      consultation_type_id: typeId,
+      benefit_type: benefit,
+      included_per_cycle: benefit === "included" ? perCycle : 1,
+      member_price_kobo: benefit === "discounted" ? Math.round(memberNaira * 100) : 0,
+    },
+    { onConflict: "plan_id,consultation_type_id" },
+  );
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/plans/${planId}`);
+  return { success: "Consultation benefit saved." };
+}
