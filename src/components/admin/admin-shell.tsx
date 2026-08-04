@@ -36,6 +36,7 @@ const NAV: NavGroup[] = [
       { label: "Members", icon: UserRound, href: "/admin/customers" },
       { label: "Child Profiles", icon: Baby },
       { label: "Active Members", icon: ListChecks, href: "/admin/customers?filter=active-sub", canonical: false },
+      { label: "Migrate Members", icon: PackageOpen, href: "/admin/migration" },
       { label: "Retention", icon: HeartHandshake, href: "/admin/retention" },
     ],
   },
