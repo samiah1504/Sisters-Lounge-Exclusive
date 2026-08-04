@@ -445,3 +445,72 @@ describe("forward-looking reservation guard (v3 §5.6, C3)", () => {
     expect(early.rows[0].entitlement_at_risk).toBe(false);
   });
 });
+
+describe("no-show tracking (v3 §5.7, owner-amended, C4)", () => {
+  it("a visit cannot be marked missed before the grace period", async () => {
+    const future = await db.query(
+      `select id from appointments where subscription_id = $1
+         and status = 'pending_confirmation' limit 1`, [subId]);
+    await expect(
+      runAs(ADMIN, (q) =>
+        q("select fn_release_appointment($1, 'missed', 'test')", [future.rows[0].id])),
+    ).rejects.toThrow(/GRACE/);
+  });
+
+  it("missed visits record no-shows; the visit is NOT consumed", async () => {
+    // Three past confirmed visits, missed without rescheduling.
+    for (const daysAgo of [20, 10, 1]) {
+      const ins = await db.query(
+        `insert into appointments (customer_id, service_id, salon_id, starts_at,
+           ends_at, duration_minutes, status)
+         values ($1, $2, $3, now() - make_interval(days => $4),
+                 now() - make_interval(days => $4) + interval '1 hour', 60, 'confirmed')
+         returning id`, [customerId, SVC_WASH, ILORIN, daysAgo]);
+      await runAs(ADMIN, (q) =>
+        q("select fn_release_appointment($1, 'missed', 'no show')", [ins.rows[0].id]));
+    }
+    const n = await db.query(
+      "select count(*)::int as n from member_no_shows where customer_id = $1",
+      [customerId]);
+    expect(n.rows[0].n).toBe(3);
+
+    // Warning issued through the retention prompt channel (fair: tell them).
+    const prompt = await db.query(
+      `select count(*)::int as n from retention_prompts
+       where customer_id = $1 and prompt_key like 'auto:no_show:%'`, [customerId]);
+    expect(prompt.rows[0].n).toBeGreaterThanOrEqual(1);
+  });
+
+  it("threshold reached: standing shows an active reservation pause", async () => {
+    const st = await db.query(
+      "select * from fn_no_show_status($1, $2)", [customerId, ILORIN]);
+    expect(st.rows[0].no_show_count).toBe(3);
+    expect(st.rows[0].warned).toBe(true);
+    expect(st.rows[0].restricted_until).not.toBeNull();
+  });
+
+  it("the member's own reservations pause; staff can still reserve for her", async () => {
+    await expect(
+      runAs(MEMBER, (q) =>
+        q("select fn_book_appointment($1, $2, $3::timestamptz, $4)",
+          [subId, SVC_WASH, at(nextOpenDate(9), "10:00"), ILORIN])),
+    ).rejects.toThrow(/NO_SHOW_RESTRICTED/);
+
+    // Fair, not punitive: the front desk reserves on her behalf just fine.
+    const staffBooked = await runAs(ADMIN, async (q) => {
+      const r = await q(
+        "select fn_book_appointment($1, $2, $3::timestamptz, $4) as id",
+        [subId, SVC_WASH, at(nextOpenDate(9), "10:00"), ILORIN]);
+      return r.rows[0].id as string;
+    });
+    expect(staffBooked).toBeTruthy();
+  });
+
+  it("an inactive policy disables enforcement entirely", async () => {
+    await db.query("update no_show_policies set is_active = false where salon_id is null");
+    const st = await db.query(
+      "select * from fn_no_show_status($1, $2)", [customerId, ILORIN]);
+    expect(st.rows[0].restricted_until).toBeNull();
+    await db.query("update no_show_policies set is_active = true where salon_id is null");
+  });
+});

@@ -511,6 +511,15 @@ describe("booking, reservation and the seven-day rule", () => {
       ]);
       return r.rows[0].id;
     });
+    // v3 §5.7: "missed" is only allowed after the grace period…
+    await expect(
+      runAs(ADMIN, (q) =>
+        q("select fn_release_appointment($1, 'missed', 'no show')", [appt2])),
+    ).rejects.toThrow(/GRACE/);
+    // …so move the visit into the past (superuser) to simulate the no-show.
+    await db.query(
+      `update appointments set starts_at = now() - interval '2 hours',
+         ends_at = now() - interval '1 hour' where id = $1`, [appt2]);
     await runAs(ADMIN, (q) =>
       q("select fn_release_appointment($1, 'missed', 'no show')", [appt2]),
     );
@@ -521,6 +530,11 @@ describe("booking, reservation and the seven-day rule", () => {
       [appt2],
     );
     expect(ent.rows[0].status).toBe("available"); // returned, not consumed
+    // And the no-show is on record (v3 §5.7).
+    const ns = await db.query(
+      "select count(*)::int as n from member_no_shows where appointment_id = $1",
+      [appt2]);
+    expect(ns.rows[0].n).toBe(1);
   });
 
   it("no visits remaining -> booking rejected with NO_VISITS", async () => {

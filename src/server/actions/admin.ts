@@ -480,6 +480,7 @@ export async function archiveProduct(productId: string, archive: boolean): Promi
 function bookingError(message: string): string {
   if (/ALREADY_COMPLETED/.test(message)) return "This appointment is already completed.";
   if (/STATE:/.test(message)) return "That change is not allowed from the current status.";
+  if (/GRACE:/.test(message)) return message.replace("GRACE: ", "Too early — ");
   if (/SKILL:/.test(message)) return "This stylist lacks the required skill for the service.";
   if (/no_stylist_double_booking|exclusion/.test(message))
     return "The stylist already has an overlapping appointment.";
@@ -950,4 +951,51 @@ export async function saveConsultationBenefit(
   if (error) return { error: error.message };
   revalidatePath(`/admin/plans/${planId}`);
   return { success: "Consultation benefit saved." };
+}
+
+/* --------------------------------- no-show policy (v3 §5.7, C4) ---------- */
+
+export async function saveNoShowPolicy(
+  salonId: string | null,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdmin();
+  const schema = z.object({
+    is_active: z.boolean(),
+    warn_after: z.coerce.number().int().min(1).max(10),
+    restrict_after: z.coerce.number().int().min(1).max(10),
+    window_days: z.coerce.number().int().min(7).max(365),
+    restriction_days: z.coerce.number().int().min(1).max(90),
+  });
+  const parsed = schema.safeParse({
+    is_active: formData.get("is_active") === "on",
+    warn_after: formData.get("warn_after"),
+    restrict_after: formData.get("restrict_after"),
+    window_days: formData.get("window_days"),
+    restriction_days: formData.get("restriction_days"),
+  });
+  if (!parsed.success) return { error: "Check the policy values." };
+  if (parsed.data.restrict_after < parsed.data.warn_after) {
+    return { error: "The pause threshold cannot be lower than the warning threshold." };
+  }
+
+  const supabase = await createClient();
+  const { data: existing } = salonId
+    ? await supabase.from("no_show_policies").select("id").eq("salon_id", salonId).limit(1)
+    : await supabase.from("no_show_policies").select("id").is("salon_id", null).limit(1);
+
+  const { error } = existing?.[0]
+    ? await supabase.from("no_show_policies").update(parsed.data).eq("id", existing[0].id)
+    : await supabase.from("no_show_policies").insert({ ...parsed.data, salon_id: salonId });
+  if (error) return { error: error.message };
+  revalidatePath("/admin/settings");
+  return { success: "No-show policy saved." };
+}
+
+export async function removeSalonNoShowPolicy(salonId: string): Promise<void> {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("no_show_policies").delete().eq("salon_id", salonId);
+  revalidatePath("/admin/settings");
 }

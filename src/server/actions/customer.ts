@@ -31,6 +31,7 @@ function friendlyDbError(message: string): string {
     [/INTERVAL:/, "Subscription visits must be at least 7 days apart — please pick a later date."],
     [/CAPACITY/, "That time is fully booked — please choose another slot."],
     [/DUPLICATE/, "You already have a booking on that date."],
+    [/NO_SHOW_RESTRICTED/, "New reservations are paused for a short while after repeated missed visits. The salon team can still reserve for you — send us a message via Chat with Us."],
     [/NO_VISITS/, "You have no visits remaining in this cycle."],
     [/DEADLINE/, "The rescheduling deadline for this appointment has passed."],
     [/STATE:/, "This appointment can no longer be changed."],

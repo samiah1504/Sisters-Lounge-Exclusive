@@ -5,7 +5,9 @@ import { requireAdmin } from "@/server/auth";
 import {
   addBlackoutDate,
   removeBlackoutDate,
+  removeSalonNoShowPolicy,
   saveBusinessHours,
+  saveNoShowPolicy,
   saveSalonSettings,
   saveSchedulingSettings,
 } from "@/server/actions/admin";
@@ -27,11 +29,13 @@ export default async function AdminSettingsPage({
   await requireAdmin();
   const { salon: salonParam } = await searchParams;
   const supabase = await createClient();
-  const [{ data: settings }, { data: salons }] = await Promise.all([
-    supabase.from("scheduling_settings").select("*").limit(1),
-    supabase.from("salons").select("*").in("status", ["open", "paused"])
-      .order("created_at"),
-  ]);
+  const [{ data: settings }, { data: salons }, { data: noShowPolicies }] =
+    await Promise.all([
+      supabase.from("scheduling_settings").select("*").limit(1),
+      supabase.from("salons").select("*").in("status", ["open", "paused"])
+        .order("created_at"),
+      supabase.from("no_show_policies").select("*"),
+    ]);
   const s = settings?.[0];
   const salonList = (salons ?? []) as Row[];
   const salon =
@@ -51,6 +55,34 @@ export default async function AdminSettingsPage({
         ])
       : [{ data: [] }, { data: [] }, { data: [] }];
   const ss = (salonSettings?.[0] ?? null) as Row | null;
+  const policies = (noShowPolicies ?? []) as Row[];
+  const brandPolicy = policies.find((x) => x.salon_id === null) ?? null;
+  const salonPolicy = salon
+    ? policies.find((x) => x.salon_id === salon.id) ?? null
+    : null;
+
+  const policyFields = (p: Row | null, prefix: string) => (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Field label="Warn after (misses)" htmlFor={`${prefix}-warn`}
+        hint="Missed visits in the window before a gentle warning.">
+        <input id={`${prefix}-warn`} name="warn_after" type="number" min={1} max={10}
+          defaultValue={p?.warn_after ?? 2} className={inputClass} />
+      </Field>
+      <Field label="Pause after (misses)" htmlFor={`${prefix}-restrict`}
+        hint="Misses before new self-service reservations pause.">
+        <input id={`${prefix}-restrict`} name="restrict_after" type="number" min={1} max={10}
+          defaultValue={p?.restrict_after ?? 3} className={inputClass} />
+      </Field>
+      <Field label="Counting window (days)" htmlFor={`${prefix}-window`}>
+        <input id={`${prefix}-window`} name="window_days" type="number" min={7} max={365}
+          defaultValue={p?.window_days ?? 90} className={inputClass} />
+      </Field>
+      <Field label="Pause length (days)" htmlFor={`${prefix}-days`}>
+        <input id={`${prefix}-days`} name="restriction_days" type="number" min={1} max={90}
+          defaultValue={p?.restriction_days ?? 14} className={inputClass} />
+      </Field>
+    </div>
+  );
 
   return (
     <div className="grid gap-5">
@@ -101,6 +133,26 @@ export default async function AdminSettingsPage({
             </div>
           </ActionForm>
         )}
+      </Card>
+
+      {/* --------------------------------------- no-show policy (v3 §5.7) */}
+      <Card>
+        <p className="font-semibold">No-Show Policy (brand default)</p>
+        <p className="mb-4 mt-0.5 text-sm text-ink-soft">
+          Fair, not punitive: a missed visit never consumes the member&apos;s
+          balance. Repeated misses first warn, then briefly pause new
+          self-service reservations — the front desk can always reserve on a
+          member&apos;s behalf. Salons below can override this default.
+        </p>
+        <ActionForm action={saveNoShowPolicy.bind(null, null)}
+          submitLabel="Save Brand Policy" warnUnsaved>
+          {policyFields(brandPolicy, "brand")}
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="is_active" className="h-5 w-5 accent-brand-600"
+              defaultChecked={brandPolicy?.is_active ?? true} />
+            Policy active
+          </label>
+        </ActionForm>
       </Card>
 
       {/* ------------------------------------------------- salon selector */}
@@ -190,6 +242,34 @@ export default async function AdminSettingsPage({
                   </div>
                 ))}
               </div>
+            </ActionForm>
+          </Card>
+
+          {/* ---------------------------------- per-salon no-show policy */}
+          <Card>
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-semibold">No-Show Policy — {salon.city}</p>
+              {salonPolicy && (
+                <ActionButton
+                  action={removeSalonNoShowPolicy.bind(null, salon.id)}
+                  label="Use brand default"
+                  confirm={`Remove ${salon.city}'s override and fall back to the brand policy?`}
+                />
+              )}
+            </div>
+            <p className="mb-4 mt-0.5 text-sm text-ink-soft">
+              {salonPolicy
+                ? "This salon overrides the brand default."
+                : "Currently using the brand default. Saving here creates an override for this salon."}
+            </p>
+            <ActionForm action={saveNoShowPolicy.bind(null, salon.id)}
+              submitLabel={`Save ${salon.city} Policy`}>
+              {policyFields(salonPolicy ?? brandPolicy, `salon-${salon.id}`)}
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="is_active" className="h-5 w-5 accent-brand-600"
+                  defaultChecked={(salonPolicy ?? brandPolicy)?.is_active ?? true} />
+                Policy active
+              </label>
             </ActionForm>
           </Card>
 

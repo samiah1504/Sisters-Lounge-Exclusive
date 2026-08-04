@@ -48,7 +48,7 @@ export default async function AdminCustomerDetailPage({
   const customer = ((rows ?? []) as Row[])[0];
   if (!customer) notFound();
 
-  const [{ data: subsData }, { data: apptsData }, { data: prompts }] = await Promise.all([
+  const [{ data: subsData }, { data: apptsData }, { data: prompts }, { data: noShows }] = await Promise.all([
     supabase
       .from("subscriptions")
       .select(
@@ -69,6 +69,13 @@ export default async function AdminCustomerDetailPage({
       .select("title, prompt_type, dismissed_at")
       .eq("customer_id", id)
       .is("dismissed_at", null),
+    // v3 §5.7: no-show history for salon managers (fair = transparent).
+    supabase
+      .from("member_no_shows")
+      .select("id, occurred_at, salon:salons(city)")
+      .eq("customer_id", id)
+      .order("occurred_at", { ascending: false })
+      .limit(12),
   ]);
   const subs = (subsData ?? []) as Row[];
   const appts = (apptsData ?? []) as Row[];
@@ -217,6 +224,29 @@ export default async function AdminCustomerDetailPage({
         planOptions={(plans ?? []).map((p) => ({ id: p.id, name: p.name }))}
         tags={tags}
       />
+
+      {/* no-show history (v3 §5.7) */}
+      {((noShows ?? []) as Row[]).length > 0 && (
+        <Card className="border-amber-200">
+          <p className="font-semibold">
+            Missed visits ({(noShows ?? []).length} recorded)
+          </p>
+          <p className="mt-1 text-sm text-ink-soft">
+            Missed visits never consume the member&apos;s balance. Repeated
+            misses warn the member and can briefly pause new self-service
+            reservations (policy under Scheduling Settings) — the team can
+            always reserve on their behalf.
+          </p>
+          <ul className="mt-2 grid gap-1 text-sm">
+            {((noShows ?? []) as Row[]).map((n) => (
+              <li key={n.id} className="flex justify-between gap-2">
+                <span>{formatDateTime(n.occurred_at)}</span>
+                <span className="text-ink-soft">{(n.salon as Row)?.city ?? ""}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {/* internal notes */}
       <Card>
