@@ -22,11 +22,15 @@ const FILTERS = [
 export default async function AdminBookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; q?: string; date?: string }>;
+  searchParams: Promise<{ filter?: string; q?: string; date?: string; salon?: string }>;
 }) {
   await requireStaffOrAdmin();
-  const { filter = "upcoming", q, date } = await searchParams;
+  const { filter = "upcoming", q, date, salon } = await searchParams;
   const supabase = await createClient();
+  // v3 §7.4: serving-salon filter (shown once there is more than one salon).
+  const { data: salonList } = await supabase
+    .from("salons").select("id, city").in("status", ["open", "paused"])
+    .order("created_at");
 
   let query = supabase
     .from("appointments")
@@ -39,6 +43,7 @@ export default async function AdminBookingsPage({
     )
     .order("starts_at", { ascending: filter === "completed" || filter === "missed" || filter === "all" ? false : true })
     .limit(100);
+  if (salon) query = query.eq("salon_id", salon);
 
   const nowIso = new Date().toISOString();
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
@@ -107,11 +112,26 @@ export default async function AdminBookingsPage({
         <button className="rounded-xl bg-brand-600 px-4 font-semibold text-white">Filter</button>
       </form>
 
+      {(salonList ?? []).length > 1 && (
+        <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4">
+          <Link href={`/admin/bookings?filter=${filter}`}
+            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold ${!salon ? "border-brand-600 bg-brand-600 text-white" : "border-line bg-white text-ink-soft"}`}>
+            All salons
+          </Link>
+          {(salonList ?? []).map((x) => (
+            <Link key={x.id} href={`/admin/bookings?filter=${filter}&salon=${x.id}`}
+              className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold ${salon === x.id ? "border-brand-600 bg-brand-600 text-white" : "border-line bg-white text-ink-soft"}`}>
+              {x.city}
+            </Link>
+          ))}
+        </div>
+      )}
+
       <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {FILTERS.map((f) => (
           <Link
             key={f.key}
-            href={`/admin/bookings?filter=${f.key}`}
+            href={`/admin/bookings?filter=${f.key}${salon ? `&salon=${salon}` : ""}`}
             className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold ${filter === f.key ? "border-brand-600 bg-brand-600 text-white" : "border-line bg-white text-ink-soft"}`}
           >
             {f.label}

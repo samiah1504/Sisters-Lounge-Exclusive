@@ -30,25 +30,31 @@ interface RetentionRow {
 export default async function AdminRetentionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; salon?: string }>;
 }) {
   await requireStaffOrAdmin();
-  const { view = "no-booking" } = await searchParams;
+  const { view = "no-booking", salon } = await searchParams;
   const supabase = await createClient();
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
+  const { data: salonChips } = await supabase
+    .from("salons").select("id, city").in("status", ["open", "paused"])
+    .order("created_at");
 
   const rows: RetentionRow[] = [];
 
   if (["no-booking", "unused-visits", "expiring", "no-upcoming"].includes(view)) {
-    const { data: subs } = await supabase
+    // v3 §7.4: retention filterable by HOME salon (attribution dimension).
+    let subsQuery = supabase
       .from("subscriptions")
       .select(
-        "id, status, customer:customer_profiles(id, profile:profiles(full_name)), " +
+        "id, status, home_salon_id, customer:customer_profiles(id, profile:profiles(full_name)), " +
           "plan:subscription_plans(name), child:children(full_name), " +
           "cycles:subscription_cycles(id, status, starts_on, ends_on, " +
           "entitlements:visit_entitlements(status))",
       )
       .in("status", ["active", "expiring_soon", "renewal_due"]);
+    if (salon) subsQuery = subsQuery.eq("home_salon_id", salon);
+    const { data: subs } = await subsQuery;
 
     const { data: liveAppts } = await supabase
       .from("appointments")
@@ -161,11 +167,26 @@ export default async function AdminRetentionPage({
         </p>
       </div>
 
+      {(salonChips ?? []).length > 1 && (
+        <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4">
+          <Link href={`/admin/retention?view=${view}`}
+            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold ${!salon ? "border-brand-600 bg-brand-600 text-white" : "border-line bg-white text-ink-soft"}`}>
+            All home salons
+          </Link>
+          {(salonChips ?? []).map((x) => (
+            <Link key={x.id} href={`/admin/retention?view=${view}&salon=${x.id}`}
+              className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold ${salon === x.id ? "border-brand-600 bg-brand-600 text-white" : "border-line bg-white text-ink-soft"}`}>
+              {x.city}
+            </Link>
+          ))}
+        </div>
+      )}
+
       <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {VIEWS.map((v) => (
           <Link
             key={v.key}
-            href={`/admin/retention?view=${v.key}`}
+            href={`/admin/retention?view=${v.key}${salon ? `&salon=${salon}` : ``}`}
             className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold ${view === v.key ? "border-brand-600 bg-brand-600 text-white" : "border-line bg-white text-ink-soft"}`}
           >
             {v.label}

@@ -111,7 +111,7 @@ const NAV: NavGroup[] = [
   {
     label: "Reports",
     items: [
-      { label: "Reports", icon: BarChart3 },
+      { label: "Reports", icon: BarChart3, href: "/admin/reports" },
       { label: "Audit Logs", icon: ScrollText },
     ],
   },
