@@ -44,7 +44,7 @@ test("mobile menu opens and navigates", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /toggle menu/i }).click();
   await expect(
-    page.getByRole("link", { name: "Membership Plans", exact: true }),
+    page.locator("#site-menu").getByRole("link", { name: "Membership Plans", exact: true }),
   ).toBeVisible();
   await page.locator("#site-menu").getByRole("link", { name: "Sign In", exact: true }).click();
   await expect(page).toHaveURL(/\/login/);
@@ -71,4 +71,23 @@ test("salons page lists open salons and captures waitlist interest", async ({ pa
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(overflow).toBe(0);
+});
+
+test("public content pages render in club voice", async ({ page }) => {
+  for (const [path, heading] of [
+    ["/about", /about sisters lounge/i],
+    ["/treatments", /treatments/i],
+    ["/faq", /frequently asked questions/i],
+    ["/contact", /contact us/i],
+    ["/terms", /membership terms/i],
+    ["/privacy", /privacy policy/i],
+    ["/refund-policy", /refund policy/i],
+  ] as const) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { name: heading }).first()).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, `${path} overflow`).toBe(0);
+  }
 });

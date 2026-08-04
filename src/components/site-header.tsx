@@ -8,7 +8,7 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/plans", label: "Membership Plans" },
   { href: "/salons", label: "Salons" },
-  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/treatments", label: "Treatments" },
   { href: "/#consultations", label: "Expert Consultations" },
   { href: "/#products", label: "Shop" },
   { href: "/login", label: "Sign In" },
