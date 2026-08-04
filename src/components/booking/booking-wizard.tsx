@@ -7,6 +7,7 @@ import {
   addonTotal,
   intervalConflict,
   totalDuration,
+  visitsAtRisk,
 } from "@/lib/booking-rules";
 import { isExtraServiceEligible, isServiceEligible } from "@/lib/eligibility";
 import {
@@ -465,6 +466,27 @@ export function BookingWizard(props: Props) {
       {/* STEP 5: review */}
       {step === 5 && service && time && (
         <div className="grid gap-4">
+          {/* v3 §5.6 — non-blocking forward-looking guard */}
+          {date &&
+            visitsAtRisk({
+              visitDate: date,
+              cycleEndsOn: sub.cycleEndsOn,
+              intervalDays: sub.intervalDays,
+              remainingAfterThis: sub.remaining - 1,
+            }) > 0 && (
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+                Heads up: with visits at least {sub.intervalDays} days apart,
+                {" "}{visitsAtRisk({
+                  visitDate: date,
+                  cycleEndsOn: sub.cycleEndsOn,
+                  intervalDays: sub.intervalDays,
+                  remainingAfterThis: sub.remaining - 1,
+                })}{" "}
+                of your remaining visits may not fit before your cycle ends.
+                You can still reserve this time — or pick an earlier date to
+                use everything you&apos;ve paid for.
+              </p>
+            )}
           <div className="rounded-2xl border border-line bg-white p-4">
             <p className="font-display text-lg text-brand-900">Visit summary</p>
             <dl className="mt-3 grid gap-2.5 text-sm">

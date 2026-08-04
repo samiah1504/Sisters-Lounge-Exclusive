@@ -52,7 +52,7 @@ export default async function AdminRetentionPage({
 
     const { data: liveAppts } = await supabase
       .from("appointments")
-      .select("subscription_id, cycle_id, starts_at, status")
+      .select("subscription_id, cycle_id, starts_at, status, entitlement_at_risk")
       .in("status", ["pending_confirmation", "pending_addon_payment", "confirmed", "assigned", "arrived", "in_service", "completed"]);
 
     for (const s of (subs ?? []) as Row[]) {
@@ -80,9 +80,13 @@ export default async function AdminRetentionPage({
         });
       }
       if (view === "unused-visits" && summary.remaining > 0) {
+        // v3 §5.6: a flagged reservation means the remaining visits may no
+        // longer fit before cycle end — nudge these members first.
+        const atRisk = cycleAppts.some(
+          (a) => a.entitlement_at_risk && a.status !== "completed");
         rows.push({
           customerId: cust.id, name: cust.profile.full_name,
-          detail: `${planName}${who} — ${summary.remaining} unused visit(s), ${daysLeft} day(s) left in cycle`,
+          detail: `${planName}${who} — ${summary.remaining} unused visit(s), ${daysLeft} day(s) left in cycle${atRisk ? " · ⚠ visits at risk (reserved too late to fit the rest)" : ""}`,
         });
       }
       if (view === "expiring" && daysLeft <= 7) {

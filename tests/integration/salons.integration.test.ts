@@ -423,3 +423,25 @@ describe("Expert Consultation membership benefits (v3 C2)", () => {
     expect(Number(price[0].p)).toBe(100000);
   });
 });
+
+describe("forward-looking reservation guard (v3 §5.6, C3)", () => {
+  it("a late reservation flags at-risk; the reservation still succeeds", async () => {
+    // Member has 2 available visits left; reserving 23+ days into the
+    // ~30-day cycle leaves no room for the second one (interval 7).
+    const apptId = await runAs(MEMBER, async (q) => {
+      const r = await q(
+        "select fn_book_appointment($1, $2, $3::timestamptz, $4) as id",
+        [subId, SVC_WASH, at(nextOpenDate(23), "10:00"), ILORIN]);
+      return r.rows[0].id as string;
+    });
+    const flagged = await db.query(
+      "select entitlement_at_risk from appointments where id = $1", [apptId]);
+    expect(flagged.rows[0].entitlement_at_risk).toBe(true);
+
+    // The earlier Abuja reservation (2 days in, plenty of room) is not flagged.
+    const early = await db.query(
+      `select entitlement_at_risk from appointments
+       where subscription_id = $1 and salon_id = $2 limit 1`, [subId, ABUJA]);
+    expect(early.rows[0].entitlement_at_risk).toBe(false);
+  });
+});

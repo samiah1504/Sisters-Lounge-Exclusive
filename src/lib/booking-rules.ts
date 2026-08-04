@@ -156,3 +156,22 @@ export const SUBSCRIPTION_TRANSITIONS: Record<string, string[]> = {
 export function canSubscriptionTransition(from: string, to: string): boolean {
   return SUBSCRIPTION_TRANSITIONS[from]?.includes(to) ?? false;
 }
+
+/**
+ * Forward-looking reservation guard (v3 §5.6). After reserving a visit on
+ * `visitDate`, how many of the member's remaining visits can no longer fit
+ * inside the cycle given the minimum interval? Non-blocking — the goal is
+ * helping members maximise their benefits, not preventing reservations.
+ */
+export function visitsAtRisk(input: {
+  visitDate: string;      // YYYY-MM-DD of the visit being reserved
+  cycleEndsOn: string;    // exclusive cycle end (YYYY-MM-DD)
+  intervalDays: number;
+  remainingAfterThis: number; // available visits left once this one is reserved
+}): number {
+  if (input.remainingAfterThis <= 0 || input.intervalDays <= 0) return 0;
+  const lastUsableDay = daysBetween(input.visitDate, input.cycleEndsOn) - 1;
+  if (lastUsableDay < 0) return input.remainingAfterThis;
+  const fittable = Math.floor(lastUsableDay / input.intervalDays);
+  return Math.max(0, input.remainingAfterThis - fittable);
+}

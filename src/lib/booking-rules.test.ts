@@ -10,6 +10,7 @@ import {
   profileCompletion,
   totalDuration,
   visitSummary,
+  visitsAtRisk,
 } from "./booking-rules";
 
 describe("daysBetween", () => {
@@ -150,5 +151,40 @@ describe("status transitions", () => {
     // there is deliberately no 'cancelled_by_customer' state at all
     expect(canSubscriptionTransition("active", "archived")).toBe(false);
     expect(canSubscriptionTransition("active", "expired")).toBe(true);
+  });
+});
+
+describe("visitsAtRisk (v3 §5.6 forward-looking guard)", () => {
+  it("no risk when plenty of cycle remains", () => {
+    expect(
+      visitsAtRisk({
+        visitDate: "2026-08-05", cycleEndsOn: "2026-09-01",
+        intervalDays: 7, remainingAfterThis: 3,
+      }),
+    ).toBe(0);
+  });
+  it("flags visits that can no longer fit before cycle end", () => {
+    // 26 days left → only 3 more interval-spaced visits fit; 1 of 4 at risk.
+    expect(
+      visitsAtRisk({
+        visitDate: "2026-08-05", cycleEndsOn: "2026-09-01",
+        intervalDays: 7, remainingAfterThis: 4,
+      }),
+    ).toBe(1);
+    // Reserving on the last day strands everything remaining.
+    expect(
+      visitsAtRisk({
+        visitDate: "2026-08-31", cycleEndsOn: "2026-09-01",
+        intervalDays: 7, remainingAfterThis: 2,
+      }),
+    ).toBe(2);
+  });
+  it("zero remaining means zero risk", () => {
+    expect(
+      visitsAtRisk({
+        visitDate: "2026-08-30", cycleEndsOn: "2026-09-01",
+        intervalDays: 7, remainingAfterThis: 0,
+      }),
+    ).toBe(0);
   });
 });
