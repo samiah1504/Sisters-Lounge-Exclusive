@@ -13,6 +13,7 @@ import type {
 } from "@/lib/types";
 import { lagosDateOf } from "@/lib/format";
 import { visitSummary, type VisitSummary } from "@/lib/booking-rules";
+import type { Row } from "@/lib/db-rows";
 
 export interface SubscriptionOverview {
   subscription: Subscription;
@@ -160,6 +161,57 @@ export async function getPendingSelection(
     .order("created_at", { ascending: false })
     .limit(1);
   return (data?.[0] as (PendingPlanSelection & { plan: SubscriptionPlan })) ?? null;
+}
+
+/* ------------------------------------------------ billing (payments spec) */
+
+export interface BillingInfo {
+  subscription_id: string;
+  status: string;
+  amount_kobo: number;
+  card_brand: string | null;
+  card_last4: string | null;
+  next_billing_at: string | null;
+  cancelled_at: string | null;
+  has_provider_subscription: boolean;
+}
+
+/** Billing relationship per membership (payments spec §10). RLS scopes to
+ * the signed-in member's own rows. */
+export async function getBillingInfos(): Promise<Map<string, BillingInfo>> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("payment_subscriptions")
+    .select(
+      "subscription_id, status, amount_kobo, card_brand, card_last4, " +
+        "next_billing_at, cancelled_at, provider_subscription_code",
+    );
+  const map = new Map<string, BillingInfo>();
+  for (const row of ((data ?? []) as unknown as Row[])) {
+    map.set(row.subscription_id, {
+      subscription_id: row.subscription_id,
+      status: row.status,
+      amount_kobo: Number(row.amount_kobo),
+      card_brand: row.card_brand,
+      card_last4: row.card_last4,
+      next_billing_at: row.next_billing_at,
+      cancelled_at: row.cancelled_at,
+      has_provider_subscription: Boolean(row.provider_subscription_code),
+    });
+  }
+  return map;
+}
+
+/** The member's payment history, newest first (payments spec §10). */
+export async function getPaymentHistory(customerId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("payments")
+    .select("id, provider_reference, kind, amount_kobo, status, failure_reason, paid_at, created_at")
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false })
+    .limit(24);
+  return data ?? [];
 }
 
 export async function getFavourites(customerId: string) {

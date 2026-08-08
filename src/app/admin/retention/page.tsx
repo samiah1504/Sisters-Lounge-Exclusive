@@ -152,7 +152,7 @@ export default async function AdminRetentionPage({
       const cust = s.customer as unknown as { id: string; profile: { full_name: string } };
       rows.push({
         customerId: cust.id, name: cust.profile.full_name,
-        detail: `Selected ${(s.plan as { name: string })?.name} on ${formatDate(s.created_at)} — awaiting payment phase or manual activation`,
+        detail: `Selected ${(s.plan as { name: string })?.name} on ${formatDate(s.created_at)} — awaiting payment or manual activation`,
       });
     }
   }

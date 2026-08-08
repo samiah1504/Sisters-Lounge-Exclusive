@@ -48,13 +48,17 @@ export default async function AdminCustomerDetailPage({
   const customer = ((rows ?? []) as Row[])[0];
   if (!customer) notFound();
 
-  const [{ data: subsData }, { data: apptsData }, { data: prompts }, { data: noShows }] = await Promise.all([
+  const [{ data: subsData }, { data: apptsData }, { data: prompts }, { data: noShows }, { data: paymentsData }] = await Promise.all([
     supabase
       .from("subscriptions")
       .select(
         "*, plan:subscription_plans(name), child:children(full_name), " +
           "cycles:subscription_cycles(id, cycle_number, starts_on, ends_on, status, " +
-          "entitlements:visit_entitlements(status))",
+          "entitlements:visit_entitlements(status)), " +
+          // Billing relationship (payments spec §14): provider references,
+          // billing status and next charge — read-only toward the provider.
+          "billing:payment_subscriptions(status, amount_kobo, next_billing_at, " +
+          "provider_subscription_code, provider_customer_code, card_brand, card_last4)",
       )
       .eq("customer_id", id)
       .order("created_at", { ascending: false }),
@@ -75,6 +79,12 @@ export default async function AdminCustomerDetailPage({
       .select("id, occurred_at, salon:salons(city)")
       .eq("customer_id", id)
       .order("occurred_at", { ascending: false })
+      .limit(12),
+    supabase
+      .from("payments")
+      .select("id, provider_reference, kind, amount_kobo, status, failure_reason, paid_at, created_at")
+      .eq("customer_id", id)
+      .order("created_at", { ascending: false })
       .limit(12),
   ]);
   const subs = (subsData ?? []) as Row[];
@@ -152,6 +162,21 @@ export default async function AdminCustomerDetailPage({
                 {summary.reserved} reserved · {summary.used} used of {summary.included}
               </p>
             )}
+            {(() => {
+              const billing = (s.billing as Row[] | Row | null);
+              const b = Array.isArray(billing) ? billing[0] : billing;
+              if (!b) return null;
+              return (
+                <p className="mt-1.5 rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs text-ink-soft">
+                  Billing: {String(b.status)}
+                  {b.next_billing_at ? ` · next ${formatDate(String(b.next_billing_at))}` : ""}
+                  {b.card_last4 ? ` · ${b.card_brand ?? "card"} ••${b.card_last4}` : ""}
+                  {b.provider_subscription_code
+                    ? ` · Paystack ${b.provider_subscription_code}`
+                    : " · provider link pending"}
+                </p>
+              );
+            })()}
             {isAdmin && current && current.status === "active" && (
               <CustomerAdminTools.AdjustVisits customerId={id} cycleId={current.id} />
             )}
@@ -159,13 +184,37 @@ export default async function AdminCustomerDetailPage({
         );
       })}
 
+      {/* payment history (payments spec §14) */}
+      {((paymentsData ?? []) as Row[]).length > 0 && (
+        <Card>
+          <p className="font-semibold">Payments</p>
+          <ul className="mt-2 grid gap-1.5 text-sm">
+            {((paymentsData ?? []) as Row[]).map((p) => (
+              <li key={String(p.id)} className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-ink-soft">
+                  {formatDate(String(p.paid_at ?? p.created_at))} ·{" "}
+                  {String(p.kind)} · ref {String(p.provider_reference)}
+                  {p.failure_reason ? ` — ${p.failure_reason}` : ""}
+                </span>
+                <span className="whitespace-nowrap font-semibold">
+                  {formatNaira(Number(p.amount_kobo))}{" "}
+                  <Badge tone={p.status === "success" ? "green" : p.status === "failed" ? "amber" : "gray"}>
+                    {String(p.status)}
+                  </Badge>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       {(customer.selections as Array<{ id: string; status: string; created_at: string; plan: { name: string } }>)
         .filter((sel) => sel.status === "pending_payment")
         .map((sel) => (
           <Card key={sel.id} className="border-amber-200 bg-amber-50">
             <p className="text-sm">
               <strong>Pending plan selection:</strong> {sel.plan?.name} · since{" "}
-              {formatDate(sel.created_at)} — awaiting payment phase or manual activation.
+              {formatDate(sel.created_at)} — awaiting payment or manual activation.
             </p>
           </Card>
         ))}

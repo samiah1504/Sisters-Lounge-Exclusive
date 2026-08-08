@@ -35,8 +35,9 @@ export default async function SelectPlanPage({
           Select the {plan.name} membership
         </h1>
         <p className="mt-2 text-sm text-ink-soft">
-          Your selection is saved to your account. Payment activation will be
-          handled in the payments phase — nothing is charged today.
+          Your selection is saved to your account — nothing is charged now.
+          Complete payment from My Membership, or the salon team can activate
+          it with you (child memberships are activated by the salon team).
         </p>
       </div>
 

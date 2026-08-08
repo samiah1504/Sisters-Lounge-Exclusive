@@ -70,7 +70,7 @@ export default async function BookPage({
         <h1 className="heading-rule font-display text-2xl text-ink">Reserve a Visit</h1>
         <EmptyState
           title="No active membership"
-          message="Reserving uses your membership visits. Choose a membership first — payment activation arrives in the payments phase, and the salon can activate migrated memberships for you."
+          message="Reserving uses your membership visits. Choose a membership and complete payment to start reserving — the salon team can also activate memberships with you."
           action={<ButtonLink href="/plans">Browse memberships</ButtonLink>}
         />
       </div>
