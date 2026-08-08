@@ -24,6 +24,26 @@ export default async function SupportListPage() {
     .order("last_message_at", { ascending: false });
   const conversations = (data ?? []) as Row[];
 
+  // WhatsApp fallback uses the member's home salon number (set per salon in
+  // Admin → Salons); any open salon's number otherwise. Hidden if none is set.
+  const [{ data: salonRows }, { data: subRows }] = await Promise.all([
+    supabase
+      .from("salons")
+      .select("id, whatsapp")
+      .eq("status", "open")
+      .not("whatsapp", "is", null)
+      .order("created_at"),
+    supabase
+      .from("subscriptions")
+      .select("home_salon_id")
+      .eq("customer_id", session.customerProfile.id)
+      .in("status", ["active", "expiring_soon", "renewal_due"]),
+  ]);
+  const salons = (salonRows ?? []) as Row[];
+  const homeIds = new Set((subRows ?? []).map((s) => s.home_salon_id));
+  const waSalon = salons.find((s) => homeIds.has(s.id)) ?? salons[0];
+  const waNumber = waSalon ? String(waSalon.whatsapp).replace(/\D/g, "") : null;
+
   return (
     <div className="grid gap-4">
       <div>
@@ -70,14 +90,17 @@ export default async function SupportListPage() {
         </div>
       )}
 
-      <p className="text-center text-xs text-ink-soft">
-        Prefer WhatsApp? Message the salon directly —{" "}
-        <a className="font-semibold text-brand-600 underline" target="_blank"
-          href="https://wa.me/2348000000000?text=Assalamu%20alaikum%2C%20I%20need%20help%20with%20my%20Sisters%20Lounge%20subscription">
-          open WhatsApp
-        </a>{" "}
-        (update this number in the code before launch).
-      </p>
+      {waNumber && (
+        <p className="text-center text-xs text-ink-soft">
+          Prefer WhatsApp? Message the salon directly —{" "}
+          <a className="font-semibold text-brand-600 underline" target="_blank"
+            href={`https://wa.me/${waNumber}?text=${encodeURIComponent(
+              "Assalamu alaikum, I need help with my Sisters Lounge membership",
+            )}`}>
+            open WhatsApp
+          </a>
+        </p>
+      )}
     </div>
   );
 }
