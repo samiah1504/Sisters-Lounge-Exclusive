@@ -9,8 +9,8 @@ export default function AboutPage() {
       <h1 className="heading-rule font-display text-3xl text-ink">About Sisters Lounge</h1>
       <div className="mt-5 grid gap-4 text-[16px] leading-relaxed text-ink">
         <p>
-          Sisters Lounge is <strong>Nigeria&apos;s first members-only natural
-          hair club</strong>. We started with a simple observation: healthy
+          Sisters Lounge is <strong>A Subscription-Based Salon for Natural
+          Hair Care</strong>. We started with a simple observation: healthy
           natural hair is not built in one appointment — it is built through
           consistent, professional care, month after month.
         </p>

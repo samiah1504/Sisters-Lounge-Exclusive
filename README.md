@@ -1,6 +1,6 @@
 # Sisters Lounge
 
-**Nigeria's First Members-Only Natural Hair Club** — membership,
+**A Subscription-Based Salon for Natural Hair Care** — membership,
 reservations and salon-operations platform for Sisters Lounge Salons.
 
 Members hold a monthly membership with a set number of salon visits,

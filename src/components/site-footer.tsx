@@ -30,7 +30,7 @@ export function SiteFooter() {
             Sisters Lounge
           </p>
           <p className="mt-1.5 max-w-xs text-sm text-ink-soft">
-            Nigeria&apos;s First Members-Only Natural Hair Club. Healthy
+            A Subscription-Based Salon for Natural Hair Care. Healthy
             natural hair through consistent professional care.
           </p>
         </div>

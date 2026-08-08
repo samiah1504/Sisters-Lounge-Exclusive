@@ -32,7 +32,7 @@ export default async function HomePage() {
               Welcome to Sisters Lounge
             </p>
             <h1 className="font-display text-4xl leading-tight text-brand-900 sm:text-5xl">
-              Nigeria&apos;s First Members-Only Natural&nbsp;Hair&nbsp;Club
+              A Subscription-Based Salon for Natural Hair&nbsp;Care
             </h1>
             <p className="mt-4 max-w-xl text-[17px] text-ink-soft">
               Healthy natural hair through consistent professional care. No

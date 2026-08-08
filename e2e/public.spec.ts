@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 test("homepage renders mobile-first with correct positioning", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: /members-only natural\s?hair\s?club/i }),
+    page.getByRole("heading", { name: /subscription-based salon for natural\s?hair\s?care/i }),
   ).toBeVisible();
   await expect(page.getByText(/welcome to sisters lounge/i).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /become a member/i }).first()).toBeVisible();

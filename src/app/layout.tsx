@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Sisters Lounge — Nigeria's First Members-Only Natural Hair Club",
+    default: "Sisters Lounge — A Subscription-Based Salon for Natural Hair Care",
     template: "%s · Sisters Lounge Exclusive",
   },
   description:
