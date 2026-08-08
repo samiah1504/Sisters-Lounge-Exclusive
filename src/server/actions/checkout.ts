@@ -203,6 +203,89 @@ export async function startMembershipCheckout(
 }
 
 /**
+ * Resume an abandoned checkout (payments spec §6 amendment, owner decision
+ * 6): the pending account and plan selection survive, so the member can
+ * return and pay later. Re-initializes payment for the existing intent —
+ * nothing is re-selected and the snapshotted amount is reused.
+ */
+export async function resumeMembershipCheckout(
+  _prev: CheckoutState,
+  _formData: FormData,
+): Promise<CheckoutState> {
+  if (!paystackConfigured()) {
+    return {
+      error:
+        "Online payment is not enabled yet. Please contact us and we will activate your membership personally.",
+    };
+  }
+  const session = await getSession();
+  if (!session || session.profile.role !== "customer") {
+    redirect("/login?next=/join/resume");
+  }
+  const email = session.profile.email;
+  if (!email) return { error: "Your account has no email address — contact support." };
+
+  const supabase = await createClient();
+  const { data: intents } = await supabase
+    .from("pending_payment_intents")
+    .select(
+      "id, amount_kobo, selection:pending_plan_selections(child_id, home_salon_id, " +
+        "plan:subscription_plans(id, name, slug, status, is_public, monthly_price_kobo, " +
+        "provider_plan_code, provider_plan_amount_kobo))",
+    )
+    .eq("purpose", "subscription_activation")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const intent = intents?.[0] as unknown as {
+    id: string;
+    amount_kobo: number;
+    selection: {
+      child_id: string | null;
+      home_salon_id: string | null;
+      plan: {
+        id: string; name: string; slug: string; status: string; is_public: boolean;
+        monthly_price_kobo: number;
+        provider_plan_code: string | null; provider_plan_amount_kobo: number | null;
+      } | null;
+    } | null;
+  } | undefined;
+  if (!intent?.selection?.plan) redirect("/plans");
+  const { selection } = intent;
+  if (selection.child_id) {
+    return {
+      error:
+        "This selection is for a child — chat with us and the salon team will activate it with you.",
+    };
+  }
+  if (!selection.home_salon_id) {
+    // Selected before checkout captured home salons — redo through checkout.
+    redirect(`/join/${selection.plan!.slug}`);
+  }
+
+  try {
+    const planCode = await ensureProviderPlan(selection.plan!);
+    const h = await headers();
+    const origin =
+      h.get("origin") ?? `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
+    const init = await initializeSubscriptionTransaction({
+      email,
+      amountKobo: Number(intent.amount_kobo),
+      planCode,
+      callbackUrl: `${origin}/join/confirming`,
+      intentId: intent.id,
+    });
+    redirect(init.authorization_url);
+  } catch (err) {
+    if (err && typeof err === "object" && "digest" in err) throw err; // NEXT_REDIRECT
+    return {
+      error:
+        "We could not reach the payment provider. Nothing was charged — please try again shortly.",
+    };
+  }
+}
+
+/**
  * Polled by the confirming page. Reads state only — activation is the
  * webhook's job alone (payments spec §9).
  */

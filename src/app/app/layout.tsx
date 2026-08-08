@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireCustomer } from "@/server/auth";
+import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/bottom-nav";
 import { Onboarding } from "@/components/onboarding";
 import { signOut } from "@/server/actions/auth";
@@ -11,6 +13,18 @@ export default async function CustomerLayout({
 }) {
   const session = await requireCustomer();
   const firstName = session.profile.full_name.split(" ")[0] || "there";
+
+  // Membership-first gate (payments spec §13, owner decision 8): an account
+  // that has never held any membership — self or child — is not a member yet
+  // and is routed to complete the purchase. Any membership history (active,
+  // expired, payment_failed, cancelled…) keeps full dashboard access so the
+  // member can manage or restore it.
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("subscriptions")
+    .select("id", { count: "exact", head: true })
+    .eq("customer_id", session.customerProfile.id);
+  if (!count) redirect("/join/resume");
 
   return (
     <div className="min-h-dvh bg-cream pb-20 lg:pb-8">
