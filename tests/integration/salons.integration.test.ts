@@ -145,7 +145,7 @@ describe("membership home salon (v3 §4.4 — attribution, never restriction)", 
   it("a waitlist salon cannot be a home salon (#39)", async () => {
     await expect(
       runAs(ADMIN, (q) =>
-        q("select fn_activate_manual_subscription($1, $2, null, null, 'x', null, $3)",
+        q("select fn_activate_manual_subscription($1, $2, null, null, 'x', $3)",
           [customerId, PREMIUM_PLAN, ABUJA])),
     ).rejects.toThrow(/SALON_UNAVAILABLE|active membership/);
   });

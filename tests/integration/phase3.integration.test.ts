@@ -323,13 +323,13 @@ describe("support chat", () => {
 });
 
 describe("subscription capacity", () => {
-  it("activation is blocked at the plan limit and allowed with an admin override", async () => {
-    // Kids plan limit is 3; two kids subscriptions exist. Add 1 more → full.
+  it("capacity never blocks membership activation (owner decision: capacity is reservation-time only)", async () => {
+    // Kids plan limit is 3; two kids subscriptions exist. Fill to the limit,
+    // then activate one more — since 0029, memberships always activate and
+    // capacity data remains advisory for the admin dashboard only.
     const fatimaCustomer = await db.query(
       `select cp.id from customer_profiles cp join profiles p on p.id = cp.profile_id
        where p.email = 'khadija@customer.test'`);
-    // khadija already has an active sub for herself; kids plan is for a child →
-    // create a child for her first (as admin on her behalf via SQL).
     const child = await db.query(
       `insert into children (customer_id, full_name, date_of_birth)
        values ($1, 'Cap Test Child', '2019-01-01') returning id`,
@@ -338,7 +338,7 @@ describe("subscription capacity", () => {
       q("select fn_activate_manual_subscription($1, $2, $3)",
         [fatimaCustomer.rows[0].id, KIDS_PLAN, child.rows[0].id]));
 
-    // Now at 3/3 — the next activation must fail…
+    // At 3/3 — the next activation still succeeds, no override needed.
     const zainabCustomer = await db.query(
       `select cp.id from customer_profiles cp join profiles p on p.id = cp.profile_id
        where p.email = 'zainab@customer.test'`);
@@ -346,19 +346,14 @@ describe("subscription capacity", () => {
       `insert into children (customer_id, full_name, date_of_birth)
        values ($1, 'Cap Test Child 2', '2020-01-01') returning id`,
       [zainabCustomer.rows[0].id]);
-    await expect(
-      runAs(ADMIN, (q) =>
-        q("select fn_activate_manual_subscription($1, $2, $3)",
-          [zainabCustomer.rows[0].id, KIDS_PLAN, child2.rows[0].id])),
-    ).rejects.toThrow(/CAPACITY_FULL/);
-
-    // …unless overridden with a reason (audited).
     await runAs(ADMIN, (q) =>
-      q("select fn_activate_manual_subscription($1, $2, $3, null, 'test', 'VIP request approved by owner')",
+      q("select fn_activate_manual_subscription($1, $2, $3)",
         [zainabCustomer.rows[0].id, KIDS_PLAN, child2.rows[0].id]));
-    const audit = await db.query(
-      "select count(*)::int as n from audit_log where action = 'capacity.override'");
-    expect(audit.rows[0].n).toBe(1);
+
+    // The dashboard still sees the over-limit state (advisory, not a gate).
+    const counts = await runAs(ADMIN, async (q) =>
+      (await q("select * from fn_capacity_counts($1)", [KIDS_PLAN])).rows[0]);
+    expect(Number(counts.plan_active)).toBeGreaterThanOrEqual(4);
   });
 
   it("customers cannot read capacity settings", async () => {

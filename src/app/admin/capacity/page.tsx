@@ -142,8 +142,9 @@ export default async function CapacityPage() {
           </tbody>
         </table>
         <p className="mt-2 text-xs text-ink-soft">
-          Per-plan limits are edited on each plan. Activations beyond a limit
-          are blocked unless an admin overrides with a reason (audited).
+          Per-plan limits are edited on each plan. Limits are advisory:
+          membership purchases always activate (capacity applies only when
+          reserving visits) — use these numbers to plan staffing and expansion.
         </p>
       </Card>
 

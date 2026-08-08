@@ -131,8 +131,8 @@ export async function runMemberImport(csv: string): Promise<{
         p_child_id: null,
         p_starts_on: row.start_date,
         p_reason: "migrated member import",
-        p_capacity_override_reason: null,
         p_home_salon_id: resolveSalonId(ctx.salons, row.home_salon),
+        p_activation_source: "migration",
       });
       if (actError) {
         if (/already has an active/i.test(actError.message)) {
