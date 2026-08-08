@@ -79,6 +79,33 @@ export async function getPlanServices(planId: string): Promise<PlanServiceRow[]>
   });
 }
 
+/** Included-service names per plan, for membership cards (payments spec §1). */
+export async function getIncludedServiceNames(
+  planIds: string[],
+): Promise<Map<string, string[]>> {
+  const map = new Map<string, string[]>();
+  if (planIds.length === 0) return map;
+  const rows = await safeRows(async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("subscription_plan_services")
+      .select("plan_id, relation, service:services(name, display_order)")
+      .in("plan_id", planIds)
+      .in("relation", ["included", "optional"]);
+    return data ?? [];
+  });
+  for (const row of rows as unknown as Array<{
+    plan_id: string;
+    service: { name: string; display_order: number | null } | null;
+  }>) {
+    if (!row.service) continue;
+    const list = map.get(row.plan_id) ?? [];
+    list.push(row.service.name);
+    map.set(row.plan_id, list);
+  }
+  return map;
+}
+
 export async function getServices(): Promise<Service[]> {
   return safeRows(async () => {
     const supabase = await createClient();

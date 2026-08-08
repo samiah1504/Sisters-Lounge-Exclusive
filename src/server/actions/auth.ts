@@ -13,10 +13,6 @@ const credentialsSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-const registerSchema = credentialsSchema.extend({
-  full_name: z.string().trim().min(2, "Enter your full name").max(120),
-});
-
 export async function signIn(
   _prev: AuthFormState,
   formData: FormData,
@@ -39,30 +35,10 @@ export async function signIn(
   redirect(next.startsWith("/") ? next : "/app");
 }
 
-export async function signUp(
-  _prev: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
-  if (!isSupabaseConfigured()) {
-    return { error: "Supabase is not configured yet — see README setup steps." };
-  }
-  const parsed = registerSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-    full_name: formData.get("full_name"),
-  });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
-  }
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: { data: { full_name: parsed.data.full_name } },
-  });
-  if (error) return { error: error.message };
-  redirect("/app");
-}
+// Standalone sign-up was removed with the membership-first flow (payments
+// spec §5, §13): accounts are created inside membership checkout
+// (startMembershipCheckout), so a visitor can no longer create a bare
+// member account outside a purchase.
 
 export async function signOut(): Promise<void> {
   const supabase = await createClient();

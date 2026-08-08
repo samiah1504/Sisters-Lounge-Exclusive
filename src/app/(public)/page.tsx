@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   getConsultationTypes,
+  getIncludedServiceNames,
   getPublicExtraServices,
   getPublicPlans,
   getPublicProducts,
@@ -21,6 +22,8 @@ export default async function HomePage() {
   ]);
   const openSalons = salons.filter((s) => s.status === "open");
   const comingSoon = salons.filter((s) => s.status !== "open");
+  const planServiceNames = await getIncludedServiceNames(
+    plans.slice(0, 6).map((p) => p.id));
 
   return (
     <>
@@ -123,11 +126,23 @@ export default async function HomePage() {
                   </span>
                 </p>
                 <p className="mt-1 text-sm font-semibold text-gold-600">
-                  {plan.visits_included} salon visit{plan.visits_included > 1 ? "s" : ""} included
+                  {plan.visits_included} Salon Visit{plan.visits_included > 1 ? "s" : ""} / Cycle
                 </p>
-                <div className="mt-4 pt-2">
-                  <ButtonLink href={`/plans/${plan.slug}`} variant="outline" className="w-full">
-                    View Membership
+                {(planServiceNames.get(plan.id) ?? []).length > 0 && (
+                  <ul className="mt-3 grid gap-1">
+                    {(planServiceNames.get(plan.id) ?? []).map((name) => (
+                      <li key={name} className="flex items-center gap-1.5 text-sm text-ink">
+                        <span aria-hidden className="text-brand-600">✓</span> {name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="mt-4 grid gap-2 pt-2">
+                  <ButtonLink href={`/join/${plan.slug}`} className="w-full">
+                    Become a Member
+                  </ButtonLink>
+                  <ButtonLink href={`/plans/${plan.slug}`} variant="ghost" className="w-full">
+                    View details
                   </ButtonLink>
                 </div>
               </Card>

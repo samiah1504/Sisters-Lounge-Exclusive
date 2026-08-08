@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getPlanBySlug,
@@ -128,19 +129,21 @@ export default async function PlanDetailPage({
           <p className="px-2 py-1.5 text-center text-sm text-ink-soft">
             This membership is currently closed to new members.
           </p>
-        ) : session?.profile.role === "customer" ? (
-          <ButtonLink href={`/app/plans/select/${plan.slug}`} className="w-full">
-            Select this plan
-          </ButtonLink>
         ) : (
-          <ButtonLink href={`/register`} className="w-full">
-            Become a member to select this membership
+          <ButtonLink href={`/join/${plan.slug}`} className="w-full">
+            Become a Member
           </ButtonLink>
         )}
-        <p className="mt-2 text-center text-xs text-ink-soft">
-          Selection is saved to your account — payment activation arrives in the
-          payments phase.
-        </p>
+        {!closed && session?.profile.role === "customer" && (
+          <p className="mt-2 text-center text-xs text-ink-soft">
+            Choosing for a child?{" "}
+            <Link href={`/app/plans/select/${plan.slug}`}
+              className="font-semibold text-brand-600 underline">
+              Select it from your account
+            </Link>{" "}
+            and the salon team will activate it with you.
+          </p>
+        )}
       </div>
     </div>
   );

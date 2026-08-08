@@ -51,6 +51,12 @@ test("mobile menu opens and navigates", async ({ page }) => {
   await expect(page.getByLabel(/email address/i)).toBeVisible();
 });
 
+test("membership-first: /register routes to choosing a membership (payments spec §5)", async ({ page }) => {
+  await page.goto("/register");
+  await expect(page).toHaveURL(/\/plans/);
+  await expect(page.getByRole("heading", { name: /membership plans/i })).toBeVisible();
+});
+
 test("customer area redirects anonymous users to login", async ({ page }) => {
   await page.goto("/app");
   await expect(page).toHaveURL(/\/login/);
