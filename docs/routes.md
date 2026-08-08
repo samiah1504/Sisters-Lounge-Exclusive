@@ -11,7 +11,10 @@
 | `/salons` | Open salons + coming-soon cities with per-city waitlist capture |
 | `/about`, `/treatments`, `/faq`, `/contact` | Club content (v3 §3.3, §6.4) |
 | `/terms`, `/privacy`, `/refund-policy` | Plain-language policies |
-| `/login`, `/register` | Auth |
+| `/join/[slug]` | Membership checkout: plan summary, account creation, home salon, Paystack redirect |
+| `/join/confirming` | Post-payment holding page (reads state only; webhook activates) |
+| `/join/resume` | Complete Your Membership for accounts without any membership history |
+| `/login` | Auth (`/register` redirects into the membership flow) |
 
 ## Customer — `/app` (role: customer)
 
@@ -78,6 +81,7 @@
 | Route | Purpose |
 | ----- | ------- |
 | `GET /api/slots?date&location&duration` | Available start times via `fn_get_available_slots` |
+| `POST /api/webhooks/paystack` | Signed, idempotent payment webhook — the sole membership activator |
 
 Route protection: `middleware.ts` redirects by session + role (UX);
 `requireCustomer` / `requireStaffOrAdmin` / `requireAdmin` re-check on every

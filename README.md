@@ -37,6 +37,9 @@ empty states and protected areas redirect to login.
    service-role key, then run `supabase/seed.sql`.
 4. For Admin → Staff (creating staff/stylist logins from the app), also set
    `SUPABASE_SERVICE_ROLE_KEY` as a server-side env var in your deployment.
+5. For online membership payments and emails set `PAYSTACK_SECRET_KEY`,
+   `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` and `RESEND_API_KEY` (see
+   `docs/payments.md`); without them checkout and email degrade gracefully.
 
 ### Local database verification (no Supabase account needed)
 
@@ -76,8 +79,12 @@ npm run test:integration  # 92 tests: RLS, reservations, salons, ledger, expense
   membership; the home salon only attributes and defaults.
 - Missed visits are never confiscated; repeated no-shows warn, then briefly
   pause self-service reservations (configurable per salon).
-- No live payments exist yet: plan selections, prepaid add-ons and paid
-  consultations create **pending payment** records only.
+- Membership is purchased online: checkout creates the account, Paystack
+  charges and renews automatically, and the **webhook** activates the
+  membership, creates cycles and allocates visits — idempotently, through
+  the same SQL functions the salon team uses. Failed renewals mark the
+  membership `payment_failed` without destroying history. Add-ons and paid
+  consultations still create **pending payment** records settled in salon.
 - Inventory quantities change **only** through the immutable stock-movement
   ledger; appointment consumption is staff-confirmed, never auto-deducted.
 - Expenses follow draft → approval → paid/voided; nobody can approve their
@@ -101,3 +108,4 @@ npm run test:integration  # 92 tests: RLS, reservations, salons, ledger, expense
 - `docs/phase-2-completion.md` — Phase 2 delivery report
 - `docs/phase-3-completion.md` — Phase 3 delivery report (operations, inventory, expenses, chat, capacity)
 - `docs/v3-completion.md` — v3 members-club pivot report **+ production cutover runbook**
+- `docs/payments.md` — automatic subscription payments (Paystack + Resend) setup & design

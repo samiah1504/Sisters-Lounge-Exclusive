@@ -37,6 +37,7 @@ never hard-deleted.
 | `0026_consultation_benefits.sql` | `plan_consultation_benefits`, `fn_my_consultation_prices`, `fn_consultation_price` |
 | `0027_reservation_guard.sql` | `appointments.entitlement_at_risk` computed at reservation (v3 §5.6, non-blocking) |
 | `0028_no_show.sql` | `no_show_policies` (brand + per-salon), `member_no_shows`, grace before "missed", warning prompts, self-service reservation pause (staff never blocked) |
+| `0029_payments.sql` | `payment_subscriptions`, `payments` (unique provider ref), `payment_events` (idempotent webhook ledger), `fn_activate_paid_subscription`, `fn_renew_subscription_cycle`, `fn_record_payment_failure`; checkout home salon on selections; capacity removed from activation (reservation-time only) |
 
 ## Status vocabularies
 
